@@ -1,6 +1,6 @@
-package com.example.socialize
+package com.example.socialize.composables
 
-import android.widget.ImageView
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,22 +29,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,47 +58,66 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.VectorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.bumptech.glide.Glide
+import coil3.compose.AsyncImage
+import coil3.compose.rememberAsyncImagePainter
+import com.example.socialize.R
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 @Composable
-fun home(navController: NavController){
+fun wholeScreenHome(navController: NavController,screenContent: MutableState<String>){
 
     Box(modifier = Modifier
         .background(color = Color.White)
         .fillMaxSize()
-        .padding(bottom = 20.dp), contentAlignment = Alignment.BottomCenter){
+        .padding(), contentAlignment = Alignment.BottomCenter){
         val drawerState = rememberDrawerState(DrawerValue.Closed)
         val coroutineScope = rememberCoroutineScope()
 
+        BackHandler {
+            navController.navigate("home")
+        }
         ModalNavigationDrawer(
             drawerState = drawerState,
             drawerContent = {
                 DrawerContent(navController, drawerState)
             }
         ) {
-            homeContent()
+            if(screenContent.value == "home"){
+                homeContent(navController)
+            }else if(screenContent.value == "profile"){
+                profileforus(navController)
+            }else if(screenContent.value =="videoCall"){
+                videoView(navController)
+            }else if(screenContent.value =="users"){
+                Users(navController)
+            }else{
+                members(navController)
+            }
+
         }
-        BottomNavigationBar()
+        BottomNavigationBar(navController,screenContent)
 
 
     }
 }
+@Composable
+fun home(navController: NavController){
+    var screenContent = remember{ mutableStateOf("home") }
+    wholeScreenHome(navController,screenContent)
+
+}
 
 @Composable
-fun BottomNavigationBar() {
+fun BottomNavigationBar(navController: NavController,screenContent: MutableState<String>) {
     var selectedIcon by remember { mutableStateOf("Home") }
 
     Box(
@@ -129,27 +146,35 @@ fun BottomNavigationBar() {
                     isSelected = selectedIcon == "Home",
                     icon = Icons.Filled.Home,
                     contentDescription = "Home",
-                    onClick = { selectedIcon = "Home" }
+                    onClick = { selectedIcon = "Home"
+                        screenContent.value = "home"
+                    }
                 )
                 IconWithSelection(
                     isSelected = selectedIcon == "Chat",
-                    painter = painterResource(R.drawable.chat),
+                    painter = rememberAsyncImagePainter(R.drawable.chat),
                     contentDescription = "Chat",
-                    onClick = { selectedIcon = "Chat" }
+                    onClick = { selectedIcon = "Chat"
+                        screenContent.value = "members"
+                    }
                 )
 
                 Spacer(Modifier.width(50.dp))
                 IconWithSelection(
                     isSelected = selectedIcon == "Video",
-                    painter = painterResource(R.drawable.video),
+                    painter = rememberAsyncImagePainter(R.drawable.video),
                     contentDescription = "Video",
-                    onClick = { selectedIcon = "Video" }
+                    onClick = { selectedIcon = "Video"
+                        screenContent.value = "videoCall"
+                    }
                 )
                 IconWithSelection(
                     isSelected = selectedIcon == "Search",
                     icon = Icons.Filled.Search,
                     contentDescription = "Search",
-                    onClick = { selectedIcon = "Search" }
+                    onClick = { selectedIcon = "Search"
+                        screenContent.value = "users"
+                    }
                 )
             }
         }
@@ -185,7 +210,7 @@ fun IconWithSelection(
     icon: ImageVector? = null,
     painter: Painter? = null,
     contentDescription: String,
-    onClick: () -> Unit,
+    onClick:  () -> Unit,
     isAddButton: Boolean = false
 ) {
     Box(
@@ -194,8 +219,7 @@ fun IconWithSelection(
             .background(
                 color = if (isSelected) Color.Gray.copy(alpha = 0.5f) else Color.Transparent,
                 shape = CircleShape
-            )
-            .clickable { onClick() }
+            ).clickable { onClick() }
             .shadow(if (isAddButton) 8.dp else 0.dp, CircleShape)
             .padding(8.dp),
         contentAlignment = Alignment.Center
@@ -222,88 +246,72 @@ fun IconWithSelection(
 
 @Composable
 fun GlideImage(
-    imageUrl: Any,
+    imageUrl:Any,
     modifier: Modifier = Modifier
 ) {
-    AndroidView(
+    Image(
         modifier = modifier,
-        factory = { context ->
-            ImageView(context).apply {
-                scaleType = ImageView.ScaleType.CENTER_CROP
-            }
-        },
-        update = { imageView ->
-            Glide.with(imageView.context)
-                .load(imageUrl)
-                .into(imageView)
-        }
+        painter = rememberAsyncImagePainter((imageUrl as Int)),
+        contentDescription = ""
     )
 }
 data class Status(val profileImage :String,val profileStatus: List<String>)
 
 @Composable
 fun discoverList(statusList: List<Status>) {
-    val infiniteState = rememberLazyListState(initialFirstVisibleItemIndex = Int.MAX_VALUE / 2)
+    val infiniteState = rememberLazyListState()
+
     val names = listOf(
         "Alice", "Bob", "Charlie", "David", "Eve",
         "Frank", "Grace", "Hannah", "Ivy", "Jack",
         "Karen", "Leo", "Mona", "Nina", "Oscar",
         "Paul", "Quinn", "Rita", "Steve", "Tina"
     )
+
     LazyRow(
         state = infiniteState,
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
     ) {
-        items(Int.MAX_VALUE) { index ->
-            val actualIndex = index % statusList.size // Wrap the index using modulus
+        items(statusList.size * 10) { index -> // Only repeat 10 times to avoid Int.MAX_VALUE
+            val actualIndex = index % statusList.size
             val status = statusList[actualIndex] // Get the actual item
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            ) {
                 Box(
                     modifier = Modifier
-                        .padding(4.dp) // Padding between items
-                        .size(55.dp) // Fixed size for each item
+                        .size(55.dp)
                 ) {
-                    // Circular gradient border
-                    Canvas(
-                        modifier = Modifier
-                            .matchParentSize()
-                    ) {
-                        val strokeWidth = 4.dp.toPx()
-                        drawCircle(
-                            brush = Brush.linearGradient(
-                                colors = listOf(Color.Red, Color.Blue),
-                                start = Offset(0f, 0f),
-                                end = Offset(size.width, size.height)
-                            ),
-                            radius = size.minDimension / 2,
-                            style = Stroke(strokeWidth),
-                        )
-                    }
+                    GradientCircle() // Cached composable for smooth performance
 
-                    // Image with circular card
+                    // Image
                     Card(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
-                        shape = CircleShape, // Make the card circular
+                            .padding(4.dp),
+                        shape = CircleShape,
                         elevation = CardDefaults.elevatedCardElevation(4.dp)
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.boy6),
+                        AsyncImage(
+                            model = R.drawable.woman, // Use Coil for better caching
                             contentDescription = "",
-                            contentScale = ContentScale.Fit,
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
                     }
                 }
-                Spacer(Modifier.width(1.dp)) // Space between cards
-                Text(names[index%20])
+                Text(names[actualIndex % names.size], fontSize = 12.sp)
             }
         }
     }
 }
+
+
+
 
 fun generateRandomColor(): Color {
     val random = Random
@@ -314,7 +322,7 @@ fun generateRandomColor(): Color {
 }
 
 @Composable
-fun postList(){
+fun postList(navController: NavController){
 
     LazyColumn(modifier = Modifier
         .fillMaxHeight()
@@ -333,7 +341,7 @@ fun postList(){
                     Row (modifier = Modifier
                         .height(60.dp)
                         .padding(4.dp)){
-                        Image(painter = painterResource(R.drawable.boy), contentDescription = "", modifier = Modifier.size(50.dp))
+                        Image(painter = rememberAsyncImagePainter( (R.drawable.boy)), contentDescription ="" , modifier = Modifier.size(50.dp).clickable(enabled = true, onClick = {navController.navigate("profileforother")}))
                         Column(modifier = Modifier
                             .fillMaxHeight()
                             .padding(start = 5.dp), verticalArrangement = Arrangement.Center) {
@@ -342,9 +350,9 @@ fun postList(){
                         }
                         Row(Modifier.fillMaxWidth().fillMaxHeight(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                             Image(
-                                painter = painterResource(R.drawable.menulist),
+                                painter = rememberAsyncImagePainter((R.drawable.menulist)),
                                 colorFilter = ColorFilter.tint(color = Color.Black),
-                                contentDescription = "",
+                                contentDescription ="" ,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -360,20 +368,20 @@ fun postList(){
                     }
                     Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically){
                         Row (modifier = Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically){
-                            Image(painter = painterResource(R.drawable.like), modifier = Modifier.size(27.dp), contentDescription = "")
+                            Image(painter = rememberAsyncImagePainter( (R.drawable.like)), modifier = Modifier.size(27.dp), contentDescription = "")
                             Text(text = " 349 Likes", style = TextStyle(color = Color.Gray))
                         }
                         Spacer(modifier = Modifier.width(15.dp))
                         Row (modifier = Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically){
                             Image(
-                                painter = painterResource(R.drawable.comment),
+                                painter = rememberAsyncImagePainter( (R.drawable.comment)),
                                 modifier = Modifier.size(27.dp),
                                 contentDescription = ""
                             )
                             Text(text = " 520 Comments", style = TextStyle(color = Color.Gray))
                         }
                         Spacer(modifier = Modifier.weight(1f))
-                        Image(painter = painterResource(R.drawable.share), modifier = Modifier.size(23.dp), contentDescription = "")
+                        Image(painter = rememberAsyncImagePainter( (R.drawable.share)), modifier = Modifier.size(23.dp), contentDescription = "")
 
                     }
                 }
@@ -385,90 +393,174 @@ fun postList(){
 }
 
 @Composable
-fun homeContent(){
-    var stateList= listOf(Status("skfjk", listOf("skfk","sjkfjksj")),Status("skfjk", listOf("skfk","sjkfjksj")),Status("skfjk", listOf("skfk","sjkfjksj")))
-    var colorstate by remember{ mutableStateOf("Discover") }
-    Column (modifier = Modifier.padding(top = 15.dp, start = 10.dp, end = 10.dp)){
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .padding(end = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Image(painter = painterResource(R.drawable.letters), contentDescription = "",modifier=Modifier.size(40.dp))
+fun homeContent(navController: NavController) {
+    val stateList = listOf(
+        Status("skfjk", listOf("skfk", "sjkfjksj")),
+        Status("skfjk", listOf("skfk", "sjkfjksj")),
+        Status("skfjk", listOf("skfk", "sjkfjksj"))
+    )
 
-            Spacer(modifier = Modifier.width(5.dp))
-            Text(text = "Socialize", style = TextStyle(fontSize = 25.sp, fontWeight = FontWeight.Bold, brush = Brush.linearGradient(
-                colors = listOf(Color(0xffff0f7b),Color(0xfff89b29))
-            )))
-            Spacer(modifier = Modifier.weight(1f))
-            Image(painter = painterResource(R.drawable.boy), contentDescription = "",modifier=Modifier.size(50.dp))
-            Spacer(modifier = Modifier.width(5.dp))
-            Card(shape = RoundedCornerShape(20.dp)) {
-                Row (modifier = Modifier.padding(start = 10.dp, end = 10.dp,top=5.dp,bottom=5.dp),verticalAlignment = Alignment.CenterVertically){
-                    Image(painter = painterResource(R.drawable.bell), contentDescription = "",modifier=Modifier.size(30.dp))
-                    Text(text = "3", style = TextStyle(fontWeight = FontWeight.Bold))
-                }
-            }
-        }
+    var colorState by remember { mutableStateOf("Discover") }
+
+    Column(
+        modifier = Modifier.padding(top = 15.dp, start = 10.dp, end = 10.dp)
+    ) {
+        TopBar(navController)
         Spacer(modifier = Modifier.height(10.dp))
-        Row {
-            Text(text = "Discover", style = TextStyle(color = if (colorstate=="Discover") Color.Black else Color.Gray, fontSize = 20.sp, fontWeight = FontWeight.Bold),modifier=Modifier.clickable{colorstate="Discover"})
-            Spacer(modifier = Modifier.width(15.dp))
-            Text(text = "Following", style = TextStyle(color = if (colorstate=="Following") Color.Black else Color.Gray, fontSize = 20.sp, fontWeight = FontWeight.Bold),modifier=Modifier.clickable{colorstate="Following"})
 
-        }
+        // Discover and Following Tabs
+        TabRow(colorState) { colorState = it }
+
         Spacer(modifier = Modifier.height(10.dp))
+
         Row {
-            Box(
-                modifier = Modifier
-                    .padding(4.dp) // Padding between items
-                    .size(80.dp),
-                contentAlignment = Alignment.BottomCenter// Fixed size for each item
-            ) {
-                // Drawing the gradient border
-                Canvas(
-                    modifier = Modifier
-                        .matchParentSize() // Ensure Canvas matches the Box size
-                ) {
-                    val strokeWidth = 4.dp.toPx() // Set the border width
-                    drawCircle(
-                        brush = Brush.linearGradient(
-                            colors = listOf(Color.Red, Color.Blue),
-                            start = Offset(0f, 0f),
-                            end = Offset(size.width, size.height)
-                        ),
-                        radius = size.minDimension / 2, // Draw circle within bounds
-                        style = Stroke(strokeWidth) // Draws just the border
-                    )
-                }
-
-                // Circular Card background
-                Card(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
-                    , // No inner padding, so it aligns with the border
-                    shape = CircleShape, // Make the card circular
-                    elevation = CardDefaults.elevatedCardElevation(4.dp)
-                ) {
-                    // Internal content (replace with actual content from the Status object)
-                    Image(
-                        painter = painterResource(R.drawable.boy), // Replace with dynamic content as needed
-                        contentDescription = "",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize() // Ensure the image fills the card
-                    )
-                }
-                    Image(painter = painterResource(R.drawable.add), contentDescription = "",  modifier = Modifier
-                        .size(20.dp).offset(y=10.dp).align(Alignment.BottomCenter).background(color=Color.White))
-
-            }
+            ProfileBox()
             Spacer(Modifier.width(1.dp))
             discoverList(stateList)
         }
+
         Spacer(Modifier.height(10.dp))
-        Text(text = "Recent Post", style = TextStyle(color = Color.Gray, fontSize = 20.sp))
-        postList()
+
+        Text(
+            text = "Recent Post",
+            style = TextStyle(color = Color.Gray, fontSize = 20.sp)
+        )
+        postList(navController)
     }
 }
+
+@Composable
+fun TopBar(navController: NavController) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(end = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = R.drawable.letters,
+            contentDescription = "",
+            modifier = Modifier.size(40.dp)
+        )
+
+        Spacer(modifier = Modifier.width(5.dp))
+        Text(
+            text = "Socialize",
+            style = TextStyle(
+                fontSize = 25.sp,
+                fontWeight = FontWeight.Bold,
+                brush = Brush.linearGradient(
+                    colors = listOf(Color(0xffff0f7b), Color(0xfff89b29))
+                )
+            )
+        )
+        Spacer(modifier = Modifier.weight(1f))
+
+        AsyncImage(
+            model = R.drawable.boy,
+            contentDescription = "",
+            modifier = Modifier.size(50.dp).clickable(enabled = true, onClick = {navController.navigate("profile")}),
+        )
+        Spacer(modifier = Modifier.width(5.dp))
+
+        NotificationBadge()
+    }
+}
+
+@Composable
+fun NotificationBadge() {
+    Card(shape = RoundedCornerShape(20.dp)) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AsyncImage(
+                model = R.drawable.bell,
+                contentDescription = "",
+                modifier = Modifier.size(30.dp)
+            )
+            Text(text = "3", style = TextStyle(fontWeight = FontWeight.Bold))
+        }
+    }
+}
+
+@Composable
+fun TabRow(selectedTab: String, onTabSelected: (String) -> Unit) {
+    Row {
+        TabButton("Discover", selectedTab == "Discover") { onTabSelected("Discover") }
+        Spacer(modifier = Modifier.width(15.dp))
+        TabButton("Following", selectedTab == "Following") { onTabSelected("Following") }
+    }
+}
+
+@Composable
+fun TabButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
+    Text(
+        text = label,
+        style = TextStyle(
+            color = if (isSelected) Color.Black else Color.Gray,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        ),
+        modifier = Modifier.clickable(onClick = onClick)
+    )
+}
+
+@Composable
+fun ProfileBox() {
+    Box(
+        modifier = Modifier
+            .padding(4.dp)
+            .size(80.dp),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        GradientCircle()
+
+        Card(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(4.dp),
+            shape = CircleShape,
+            elevation = CardDefaults.elevatedCardElevation(4.dp)
+        ) {
+            AsyncImage(
+                model = R.drawable.boy,
+                contentDescription = "",
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        AsyncImage(
+            model = R.drawable.button,
+            contentDescription = "",
+            modifier = Modifier
+                .size(20.dp)
+                .offset(y = 10.dp)
+                .align(Alignment.BottomCenter)
+                .background(Color.Transparent)
+        )
+    }
+}
+
+@Composable
+fun GradientCircle() {
+    Canvas(
+        modifier = Modifier.size(80.dp)
+    ) {
+        val strokeWidth = 4.dp.toPx()
+        drawCircle(
+            brush = Brush.linearGradient(
+                colors = listOf(Color.Red, Color.Blue),
+                start = Offset(0f, 0f),
+                end = Offset(size.width, size.height)
+            ),
+            radius = size.minDimension / 2,
+            style = Stroke(strokeWidth)
+        )
+    }
+}
+
 
 @Composable
 fun DrawerContent(navController: NavController, drawerState: DrawerState) {

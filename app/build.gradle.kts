@@ -2,11 +2,13 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
     namespace = "com.example.socialize"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.socialize"
@@ -45,6 +47,7 @@ android {
 }
 
 dependencies {
+    val room_version = "2.6.1"
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -68,7 +71,27 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("io.appwrite:sdk-for-android:6.1.0")
 
+    //Datastore library
+    implementation("androidx.datastore:datastore-preferences:1.1.3")
+
+    //Sql and NoSql local database libraries
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("com.couchbase.lite:couchbase-lite-android-ktx:3.2.2")
+
+    //Coil library for loading images
+    implementation("io.coil-kt.coil3:coil-compose:3.1.0")
+    implementation("io.coil-kt.coil3:coil-network-okhttp:3.1.0")
+
+    //Dagger hilt dependency
+    implementation("com.google.dagger:hilt-android:2.51.1")
+    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+
+    //Retrofit service
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+}
+kapt {
+    correctErrorTypes = true
 }
