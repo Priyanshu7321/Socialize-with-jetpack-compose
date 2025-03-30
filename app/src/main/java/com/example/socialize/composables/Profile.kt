@@ -111,6 +111,7 @@ fun profileforus(navController: NavController){
                     .padding(horizontal = 10.dp, vertical = 5.dp),
                 contentAlignment = Alignment.Center
             ) {
+
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Image(
                         painter = rememberAsyncImagePainter(R.drawable.collage),
