@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "603761682281",
+    "project_id": "personal-projects-ccfe0",
+    "storage_bucket": "personal-projects-ccfe0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:603761682281:android:2dc9f00b6a5a41a718fff8",
+        "android_client_info": {
+          "package_name": "com.example.socialize"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKGcNk-DteO88OwilcO6DWFxbtYf9D5fo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
