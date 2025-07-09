@@ -1,4 +1,4 @@
-package com.example.socialize.composables
+package com.example.socialize.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -38,15 +40,36 @@ import com.example.socialize.R
 @Composable
 fun post(navController: NavController){
     var text by remember{ mutableStateOf("") }
-    Column (modifier = Modifier.fillMaxSize()){
-        Box{
-            Row(modifier = Modifier.fillMaxWidth().height(70.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center){
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .systemBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        Box(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)){
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(70.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ){
                 Text("Express your views", style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold))
             }
-            Image(painter = painterResource(R.drawable.back), contentDescription = "",Modifier.size(20.dp).align(AbsoluteAlignment.CenterLeft).offset(x=20.dp))
-
+            Image(
+                painter = painterResource(R.drawable.back),
+                contentDescription = "",
+                modifier = Modifier.size(20.dp).align(Alignment.CenterStart).offset(x = 20.dp)
+            )
         }
-        Card(modifier = Modifier.width(300.dp).height(200.dp).align(Alignment.CenterHorizontally), elevation = CardDefaults.cardElevation(5.dp)) {
+        Card(
+            modifier = Modifier
+                .width(300.dp)
+                .height(200.dp)
+                .padding(vertical = 12.dp),
+            elevation = CardDefaults.cardElevation(5.dp)
+        ) {
             Box(modifier = Modifier.fillMaxSize()){
                 Image(
                     modifier = Modifier.align(Alignment.Center).size(100.dp),
@@ -55,21 +78,14 @@ fun post(navController: NavController){
                 )
             }
         }
-        Column {
-            TextField(
-                value = text,
-                onValueChange = {it-> text=it},
-                label = { Text("Write yout views") },
-                modifier = Modifier.fillMaxSize(),
-                colors = TextFieldDefaults.colors(unfocusedContainerColor = Color.White),
-            )
-        }
+        TextField(
+            value = text,
+            onValueChange = {it-> text=it},
+            label = { Text("Write your views...") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            colors = TextFieldDefaults.colors(unfocusedContainerColor = Color.White),
+        )
     }
-}
-
-@Preview(showSystemUi = true, showBackground = true)
-@Composable
-fun showmain(){
-    var navController:NavController= rememberNavController()
-    post(navController)
 }

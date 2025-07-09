@@ -1,9 +1,11 @@
 package com.example.socialize.module
 
 import android.content.Context
-import com.couchbase.lite.*
-import com.couchbase.lite.Collection
-import com.example.socialize.Constants.AppConstants
+import com.example.socialize.database.AppDatabase
+import com.example.socialize.dao.UserDao
+import com.example.socialize.dao.MessageDao
+import com.example.socialize.dao.GroupChatDao
+import com.example.socialize.dao.GroupMemberDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,35 +15,36 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class DatabaseModule {
+object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): Database {
-        CouchbaseLite.init(context)
-        return Database("SocializeMobDB", DatabaseConfiguration())
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+        return AppDatabase.getDatabase(context)
     }
 
     @Provides
     @Singleton
-    fun provideUserCollection(database: Database): Collection? {
-
-        val scope = database.getScope(AppConstants.UserScopeName)
-        if (scope != null) {
-            return scope.getCollection(AppConstants.UserCollectionName)
-        }else{
-            return database.createCollection(AppConstants.UserCollectionName,AppConstants.UserScopeName)
-        }
+    fun provideUserDao(database: AppDatabase): UserDao {
+        return database.userDao()
     }
 
     @Provides
     @Singleton
-    fun providePostCollection(database: Database): Collection? {
-        val scope = database.getScope("socializeScope")
-        if (scope != null) {
-            return scope.getCollection("postCollection")
-        }else{
-            return database.createCollection("postCollection","socializeScope")
-        }
+    fun provideMessageDao(database: AppDatabase): MessageDao {
+        return database.messageDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGroupChatDao(database: AppDatabase): GroupChatDao {
+        return database.groupChatDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGroupMemberDao(database: AppDatabase): GroupMemberDao {
+        return database.groupMemberDao()
     }
 }
+

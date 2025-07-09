@@ -1,5 +1,6 @@
 package com.example.socialize.composables
 
+import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.ui.Alignment
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
@@ -53,7 +52,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
@@ -64,66 +62,136 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import coil3.compose.AsyncImage
-import coil3.compose.rememberAsyncImagePainter
+import androidx.navigation.NavHostController
+import coil.compose.rememberAsyncImagePainter
 import com.example.socialize.R
+import com.example.socialize.screens.Users
+import com.example.socialize.screens.members
+import com.example.socialize.screens.profileforother
+import com.example.socialize.screens.profileforus
+import com.example.socialize.screens.videoView
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import com.example.socialize.screens.Users
+import com.example.socialize.screens.members
+import com.example.socialize.screens.profileforother
+import com.example.socialize.screens.profileforus
+import com.example.socialize.screens.videoView
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.navigation.compose.currentBackStackEntryAsState
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.socialize.screens.SwipeableCards
+import com.example.socialize.screens.chats
+import com.example.socialize.screens.post
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun wholeScreenHome(navController: NavController,screenContent: MutableState<String>){
-
-    Box(modifier = Modifier
-        .background(color = Color.White)
-        .fillMaxSize()
-        .padding(), contentAlignment = Alignment.BottomCenter){
-        val drawerState = rememberDrawerState(DrawerValue.Closed)
-        val coroutineScope = rememberCoroutineScope()
-
-        BackHandler {
-            navController.navigate("home")
-        }
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-                DrawerContent(navController, drawerState)
-            }
-        ) {
-            if(screenContent.value == "home"){
-                homeContent(navController)
-            }else if(screenContent.value == "profile"){
-                profileforus(navController)
-            }else if(screenContent.value =="videoCall"){
-                videoView(navController)
-            }else if(screenContent.value =="users"){
-                Users(navController)
-            }else{
-                members(navController)
-            }
-
-        }
-        BottomNavigationBar(navController,screenContent)
-
-
-    }
-}
-@Composable
-fun home(navController: NavController){
-    var screenContent = remember{ mutableStateOf("home") }
-    wholeScreenHome(navController,screenContent)
-
-}
-
-@Composable
-fun BottomNavigationBar(navController: NavController,screenContent: MutableState<String>) {
+fun home() {
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val coroutineScope = rememberCoroutineScope()
     var selectedIcon by remember { mutableStateOf("Home") }
+    var navController = rememberNavController()
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+    val bottomBarRoutes = listOf("home", "members", "videoCall", "users")
+    Scaffold(
+        bottomBar = {
+            if (currentRoute in bottomBarRoutes) {
+                BottomNavigationBar(navController, selectedIcon) { selected ->
+                    selectedIcon = selected
+                    when (selected) {
+                        "Home" -> navController.navigate("home")
+                        "Chat" -> navController.navigate("members")
+                        "Video" -> navController.navigate("videoCall")
+                        "Search" -> navController.navigate("users")
+                    }
+                }
+            }
+        }
+    ) {
+        Box(
+            modifier = Modifier
+                .background(color = Color.White)
+                .fillMaxSize()
+                .systemBarsPadding(),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            BackHandler {
+                navController.navigate("home")
+            }
+            ModalNavigationDrawer(
+                drawerState = drawerState,
+                drawerContent = {
+                    DrawerContent(navController, drawerState)
+                }
+            ) {
+                NavHost(
+                    navController = navController,
+                    startDestination = "home",
+                    modifier = Modifier.padding(5.dp)
+                ) {
+                    composable("home") {
+                        homeContent(navController)
+                    }
+                    composable("profile") {
+                        profileforus(navController)
+                    }
+                    composable("profileforother") {
+                        profileforother(navController)
+                    }
+                    composable("chats") {
+                        chats(navController)
+                    }
+                    composable("posting") {
+                        post(navController)
+                    }
+                    composable("members") {
+                        members(navController)
+                    }
+                    composable("status") {
+                        SwipeableCards(navController)
+                    }
+                    composable("videoCall") {
+                        videoView(navController)
+                    }
+                    composable("users") {
+                        Users(navController)
+                    }
 
+                }
+            }
+
+        }
+    }
+
+
+}
+
+@Composable
+fun BottomNavigationBar(navController: NavController, selectedIcon: String, onIconSelected: (String) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp)
+            .padding(start = 20.dp, end = 20.dp,bottom=10.dp)
     ) {
         Card(
             modifier = Modifier
@@ -131,8 +199,9 @@ fun BottomNavigationBar(navController: NavController,screenContent: MutableState
                 .height(60.dp)
                 .align(Alignment.BottomCenter),
             colors = CardDefaults.cardColors(
-                containerColor = Color.Blue.copy(alpha = 0.3f) // Semi-transparent background
+                containerColor = Color.White
             ),
+            elevation = CardDefaults.elevatedCardElevation(5.dp),
             shape = RoundedCornerShape(50.dp),
         ) {
             Row(
@@ -146,58 +215,50 @@ fun BottomNavigationBar(navController: NavController,screenContent: MutableState
                     isSelected = selectedIcon == "Home",
                     icon = Icons.Filled.Home,
                     contentDescription = "Home",
-                    onClick = { selectedIcon = "Home"
-                        screenContent.value = "home"
-                    }
+                    onClick = { onIconSelected("Home") }
                 )
                 IconWithSelection(
                     isSelected = selectedIcon == "Chat",
                     painter = rememberAsyncImagePainter(R.drawable.chat),
                     contentDescription = "Chat",
-                    onClick = { selectedIcon = "Chat"
-                        screenContent.value = "members"
-                    }
+                    onClick = { onIconSelected("Chat") }
                 )
-
                 Spacer(Modifier.width(50.dp))
                 IconWithSelection(
                     isSelected = selectedIcon == "Video",
                     painter = rememberAsyncImagePainter(R.drawable.video),
                     contentDescription = "Video",
-                    onClick = { selectedIcon = "Video"
-                        screenContent.value = "videoCall"
-                    }
+                    onClick = { onIconSelected("Video") }
                 )
                 IconWithSelection(
                     isSelected = selectedIcon == "Search",
                     icon = Icons.Filled.Search,
                     contentDescription = "Search",
-                    onClick = { selectedIcon = "Search"
-                        screenContent.value = "users"
-                    }
+                    onClick = { onIconSelected("Search") }
                 )
             }
         }
         Card(
             modifier = Modifier
-                .height(60.dp) // Ensure the card height matches the parent
-                .width(60.dp) // Elevate the card visually above the bar
+                .height(60.dp)
+                .width(60.dp)
                 .clip(shape = CircleShape)
                 .background(color = Color.White)
-                .align(Alignment.Center),
+                .align(Alignment.Center)
+                .clickable { navController.navigate("posting") },
             shape = CircleShape,
-            elevation = CardDefaults.elevatedCardElevation(8.dp)
+            elevation = CardDefaults.elevatedCardElevation(8.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xfff89b29))
         ) {
             Box(
-                modifier = Modifier.fillMaxSize(), // Make the box fill the card size
-                contentAlignment = Alignment.Center // Center the icon inside the box
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
                 Image(
                     imageVector = Icons.Filled.Add,
                     contentDescription = "Plus",
-                    colorFilter = ColorFilter.tint(color = Color.Blue),
-                    modifier = Modifier
-                        .size(40.dp) // Customize the icon size for scaling
+                    colorFilter = ColorFilter.tint(color = Color.White),
+                    modifier = Modifier.size(40.dp)
                 )
             }
         }
@@ -229,7 +290,7 @@ fun IconWithSelection(
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
-                tint = Color.White,
+                tint = Color(0xfff89b29),
 
                 modifier = Modifier.size(if (isAddButton) 32.dp else 24.dp) // Larger icon size for Add button
             )
@@ -237,7 +298,7 @@ fun IconWithSelection(
             Image(
                 painter = painter,
                 contentDescription = contentDescription,
-                colorFilter = ColorFilter.tint(Color.White),
+                colorFilter = ColorFilter.tint(Color(0xfff89b29)),
                 modifier = Modifier.size(if (isAddButton) 32.dp else 24.dp)
             )
         }
@@ -246,13 +307,21 @@ fun IconWithSelection(
 
 @Composable
 fun GlideImage(
-    imageUrl:Any,
-    modifier: Modifier = Modifier
+    imageUrl: Any,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Fit
 ) {
-    Image(
+    val context = LocalContext.current
+    val imageRequest = ImageRequest.Builder(context)
+        .data(imageUrl)
+        .size(width = 800, height = 600) // Limit size to prevent memory issues
+        .build()
+    
+    AsyncImage(
+        model = imageRequest,
+        contentDescription = "",
         modifier = modifier,
-        painter = rememberAsyncImagePainter((imageUrl as Int)),
-        contentDescription = ""
+        contentScale = contentScale
     )
 }
 data class Status(val profileImage :String,val profileStatus: List<String>)
@@ -328,7 +397,7 @@ fun postList(navController: NavController){
         .fillMaxHeight()
         .padding(top = 15.dp)) {
         items(20){
-            it->
+                it->
             val cardColor = generateRandomColor()
             val scrollState = rememberScrollState()
             Card (modifier = Modifier
@@ -341,7 +410,11 @@ fun postList(navController: NavController){
                     Row (modifier = Modifier
                         .height(60.dp)
                         .padding(4.dp)){
-                        Image(painter = rememberAsyncImagePainter( (R.drawable.boy)), contentDescription ="" , modifier = Modifier.size(50.dp).clickable(enabled = true, onClick = {navController.navigate("profileforother")}))
+                        Image(painter = rememberAsyncImagePainter( (R.drawable.boy)), contentDescription ="" , modifier = Modifier.size(50.dp).clickable(enabled = true, onClick = {
+                            navController.navigate("profileforother") {
+                                launchSingleTop = true
+                            }
+                        }))
                         Column(modifier = Modifier
                             .fillMaxHeight()
                             .padding(start = 5.dp), verticalArrangement = Arrangement.Center) {
@@ -360,10 +433,18 @@ fun postList(navController: NavController){
                     Text(text = "Discover adventure in patogania's peaks or serenity provences @helmets-arrival", style = TextStyle(fontSize = 15.sp))
                     Spacer(Modifier.height(10.dp))
                     Row(modifier = Modifier.horizontalScroll(scrollState)) {
-                        GlideImage(R.drawable.forest1, modifier = Modifier.size(150.dp))
+                        GlideImage(
+                            imageUrl = R.drawable.forest2, // Using smaller image (65KB instead of 2.4MB)
+                            modifier = Modifier.size(150.dp),
+                            contentScale = ContentScale.Crop
+                        )
 
                         Spacer(Modifier.width(5.dp))
-                        GlideImage(R.drawable.forest1, modifier = Modifier.size(150.dp))
+                        GlideImage(
+                            imageUrl = R.drawable.forest2, // Using smaller image (65KB instead of 2.4MB)
+                            modifier = Modifier.size(150.dp),
+                            contentScale = ContentScale.Crop
+                        )
 
                     }
                     Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically){
@@ -403,7 +484,7 @@ fun homeContent(navController: NavController) {
     var colorState by remember { mutableStateOf("Discover") }
 
     Column(
-        modifier = Modifier.padding(top = 15.dp, start = 10.dp, end = 10.dp)
+        modifier = Modifier.systemBarsPadding().padding(top = 15.dp, start = 10.dp, end = 10.dp)
     ) {
         TopBar(navController)
         Spacer(modifier = Modifier.height(10.dp))
@@ -459,7 +540,11 @@ fun TopBar(navController: NavController) {
         AsyncImage(
             model = R.drawable.boy,
             contentDescription = "",
-            modifier = Modifier.size(50.dp).clickable(enabled = true, onClick = {navController.navigate("profile")}),
+            modifier = Modifier.size(50.dp).clickable(enabled = true, onClick = {
+                navController.navigate("profile") {
+                    launchSingleTop = true
+                }
+            }),
         )
         Spacer(modifier = Modifier.width(5.dp))
 
@@ -607,10 +692,4 @@ fun DrawerItem(
 
 fun hello() : Int{
     return 89
-}
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun viewPreview(){
-    var navController= rememberNavController()
-    home(navController )
 }

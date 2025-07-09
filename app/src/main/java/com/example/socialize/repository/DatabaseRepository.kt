@@ -1,74 +1,126 @@
 package com.example.socialize.repository
 
 import android.util.Log
-import androidx.core.view.OneShotPreDrawListener.add
-import com.couchbase.lite.DataSource
-import com.couchbase.lite.Database
-import com.couchbase.lite.Document
-import com.couchbase.lite.Meta
-import com.couchbase.lite.MutableArray
-import com.couchbase.lite.MutableDictionary
-import com.couchbase.lite.MutableDocument
-import com.couchbase.lite.QueryBuilder
-import com.couchbase.lite.SelectResult
+import com.example.socialize.dao.UserDao
+import com.example.socialize.dao.MessageDao
+import com.example.socialize.dao.GroupChatDao
+import com.example.socialize.dao.GroupMemberDao
 import com.example.socialize.entity.User
+import com.example.socialize.pojo.Message
+import com.example.socialize.pojo.GroupChat
+import com.example.socialize.pojo.GroupMember
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class DatabaseRepository @Inject constructor(private val database: Database) {
+class DatabaseRepository @Inject constructor(
+    private val userDao: UserDao,
+    private val messageDao: MessageDao,
+    private val groupChatDao: GroupChatDao,
+    private val groupMemberDao: GroupMemberDao
+) {
 
-    fun insertData(user: User) {
-        val document = MutableDocument().apply {
-            setString("id", user.id)
-            setString("username", user.username)
-            setString("name", user.name)
-            setString("email", user.email)
-            setString("password", user.password)
-            setString("age", user.age)
-            setString("MobileNum",user.mobileNum);
-        }
-        database.save(document)
-        Log.d("Couchbase", "Document inserted: ${document.id}")
+    // User operations
+    suspend fun insertUser(user: User) {
+        userDao.insertUser(user)
+        Log.d("Room", "Inserted User with ID: ${user.id}")
     }
 
-
-    fun getData(id: String): Document? {
-        return database.getDocument(id)
+    suspend fun getUserById(id: String): User? {
+        return userDao.getUserById(id)
     }
 
-    fun updateData(id: String, updates: Map<String, Any>) {
-        val document = database.getDocument(id) ?: return
-        val mutableDoc = document.toMutable()
-
-        for ((key, value) in updates) {
-            mutableDoc.setString(key, value.toString())
-        }
-        database.getCollection(id)?.save(mutableDoc)
-        Log.d("Couchbase", "Updated document: $id with values: $updates")
+    suspend fun updateUser(user: User) {
+        userDao.updateUser(user)
+        Log.d("Room", "Updated User with ID: ${user.id}")
     }
 
-
-    fun deleteData(id: String) {
-        val document = database.getDocument(id) ?: return
-        database.delete(document)
-        Log.d("Couchbase", "Deleted document: $id")
+    suspend fun deleteUser(user: User) {
+        userDao.deleteUser(user)
+        Log.d("Room", "Deleted User with ID: ${user.id}")
     }
 
-    fun queryData(): MutableList<Map<String, Any?>> {
-        val query = QueryBuilder.select(SelectResult.expression(Meta.id), SelectResult.all())
-            .from(DataSource.database(database))
-
-        val result = query.execute()
-        val documentsList = mutableListOf<Map<String, Any?>>()
-
-        for (row in result) {
-            val documentId = row.getString("id") ?: continue
-            val data = row.getDictionary("my_database")?.toMap() ?: continue
-            val documentMap = mutableMapOf<String, Any?>("id" to documentId) + data
-            documentsList.add(documentMap)
-        }
-        return documentsList
+    fun getAllUsers(): Flow<List<User>> {
+        return userDao.getAllUsers()
     }
 
+    suspend fun getAllUsersList(): List<User> {
+        return userDao.getAllUsersList()
+    }
+
+    suspend fun getUserByCredentials(username: String, password: String): User? {
+        return userDao.getUserByCredentials(username, password)
+    }
+
+    // Message operations
+    suspend fun insertMessage(message: Message) {
+        messageDao.insertMessage(message)
+    }
+
+    suspend fun getMessageById(id: Long): Message? {
+        return messageDao.getMessageById(id)
+    }
+
+    suspend fun updateMessage(message: Message) {
+        messageDao.updateMessage(message)
+    }
+
+    suspend fun deleteMessage(message: Message) {
+        messageDao.deleteMessage(message)
+    }
+
+    fun getMessagesBetweenUsers(userId1: String, userId2: String): Flow<List<Message>> {
+        return messageDao.getMessagesBetweenUsers(userId1, userId2)
+    }
+
+    fun getMessagesForGroup(groupId: Long): Flow<List<Message>> {
+        return messageDao.getMessagesForGroup(groupId)
+    }
+
+    fun getAllMessages(): Flow<List<Message>> {
+        return messageDao.getAllMessages()
+    }
+
+    // Group operations
+    suspend fun insertGroupChat(groupChat: GroupChat): Long {
+        return groupChatDao.insertGroupChat(groupChat)
+    }
+
+    suspend fun getGroupChatById(id: Long): GroupChat? {
+        return groupChatDao.getGroupChatById(id)
+    }
+
+    suspend fun updateGroupChat(groupChat: GroupChat) {
+        groupChatDao.updateGroupChat(groupChat)
+    }
+
+    suspend fun deleteGroupChat(groupChat: GroupChat) {
+        groupChatDao.deleteGroupChat(groupChat)
+    }
+
+    fun getAllGroupChats(): Flow<List<GroupChat>> {
+        return groupChatDao.getAllGroupChats()
+    }
+
+    fun getGroupChatsByCreator(creatorId: String): Flow<List<GroupChat>> {
+        return groupChatDao.getGroupChatsByCreator(creatorId)
+    }
+
+    // Group member operations
+    suspend fun addGroupMember(groupId: Long, userId: String) {
+        groupMemberDao.insertGroupMember(GroupMember(groupId, userId))
+    }
+
+    suspend fun removeGroupMember(groupId: Long, userId: String) {
+        groupMemberDao.deleteGroupMember(GroupMember(groupId, userId))
+    }
+
+    suspend fun getGroupMembers(groupId: Long): List<String> {
+        return groupMemberDao.getGroupMembers(groupId)
+    }
+
+    suspend fun getUserGroups(userId: String): List<Long> {
+        return groupMemberDao.getUserGroups(userId)
+    }
 }

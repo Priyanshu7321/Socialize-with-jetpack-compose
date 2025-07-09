@@ -10,16 +10,31 @@ android {
     namespace = "com.example.socialize"
     compileSdk = 35
 
+    ndkVersion = "26.1.10909125"
+
     defaultConfig {
         applicationId = "com.example.socialize"
         minSdk = 25
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
+        buildConfigField("String", "BASE_URL", "\"http://192.168.1.5:8080/start/\"")
 
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
+
+    }
+    signingConfigs {
+        create("release") {
+            storeFile = file("my-release-key.jks")
+            storePassword = "123456789"
+            keyAlias = "my-key-alias"
+            keyPassword = "123456789"
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -34,7 +49,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.0"
+        kotlinCompilerExtensionVersion = "1.5.8"
     }
 
     kotlinOptions {
@@ -42,7 +57,7 @@ android {
     }
     buildFeatures {
         compose = true
-        viewBinding = true
+        buildConfig = true
     }
 }
 
@@ -76,17 +91,19 @@ dependencies {
     //Datastore library
     implementation("androidx.datastore:datastore-preferences:1.1.3")
 
-    //Sql and NoSql local database libraries
+    //Room database libraries
     implementation("androidx.room:room-runtime:$room_version")
-    implementation("com.couchbase.lite:couchbase-lite-android-ktx:3.2.2")
+    implementation("androidx.room:room-ktx:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
 
     //Coil library for loading images
-    implementation("io.coil-kt.coil3:coil-compose:3.1.0")
-    implementation("io.coil-kt.coil3:coil-network-okhttp:3.1.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("io.coil-kt:coil:2.5.0")
 
     //Dagger hilt dependency
     implementation("com.google.dagger:hilt-android:2.51.1")
     kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
     //Retrofit service
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")

@@ -1,13 +1,21 @@
 package com.example.socialize.entity
 
-class User(
-    var id: String = "Default",
-    var username: String = "Default",
-    var name: String = "Default",
-    var email: String = "Default",
-    var password: String = "Default",
-    var age: String = "Default",
-    var mobileNum:String = "Default"
-) {
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-}
+@Entity(tableName = "users")
+data class User(
+    @PrimaryKey
+    val id: String,
+    val username: String,
+    val name: String,
+    val email: String,
+    val password: String,
+    val age: String,
+    val mobileNum: String
+)
+
+data class UserPassword(
+    val username: String,
+    val password: String
+)

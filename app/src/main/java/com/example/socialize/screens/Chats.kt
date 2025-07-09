@@ -1,11 +1,10 @@
-package com.example.socialize.composables
+package com.example.socialize.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -42,22 +41,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.socialize.R
+import com.example.socialize.viewmodel.DatabaseViewModel
+import androidx.compose.foundation.layout.systemBarsPadding
 
 @Composable
-fun chats(navController: NavController) {
+fun chats(navController: NavController,databaseViewModel: DatabaseViewModel=hiltViewModel()) {
     Box(
         modifier = Modifier
             .background(color = Color.Gray)
             .fillMaxSize()
+            .systemBarsPadding()
+            .padding(4.dp)
     )  {
 
         Column(
             modifier = Modifier
                 .background(color = Color.White)
                 .fillMaxSize()
-                .padding(top = 50.dp, bottom = 10.dp)
+                .padding(bottom = 10.dp, start = 8.dp, end = 8.dp)
         ) {
             Card(
                 modifier = Modifier
@@ -78,7 +83,7 @@ fun chats(navController: NavController) {
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(end = 10.dp),
+                        .padding(end = 10.dp, start = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = {}) {
@@ -118,10 +123,10 @@ fun chats(navController: NavController) {
                 }
 
             }
-            Column (modifier = Modifier.weight(1f)){
+            Column (modifier = Modifier.weight(1f).padding(vertical = 8.dp)){
                 mainChatSection()
             }
-            Box(){
+            Box(modifier = Modifier.padding(top = 8.dp)){
                 messageSendSection()
             }
         }
@@ -132,16 +137,20 @@ fun chats(navController: NavController) {
 
 @Composable
 fun mainChatSection(){
-    LazyColumn (modifier = Modifier
-        .fillMaxHeight()
-        .fillMaxWidth()
-        .padding(horizontal = 5.dp)){
-        items(20){
-            it->
+    LazyColumn (
+        modifier = Modifier
+            .fillMaxHeight()
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp)){
+        items(20){ it ->
             if(it%2==0){
-                Row (modifier = Modifier
-                    .padding(start = 50.dp)
-                    .fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.Top){
+                Row (
+                    modifier = Modifier
+                        .padding(start = 50.dp, top = 8.dp, bottom = 8.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.Top
+                ){
                     Column (horizontalAlignment = Alignment.End){
                         Text(
                             text = "You",
@@ -168,9 +177,13 @@ fun mainChatSection(){
                     Image(painter = painterResource(R.drawable.boy), contentDescription = "", modifier = Modifier.size(30.dp))
                 }
             }else{
-                Row (modifier = Modifier
-                    .padding(end = 50.dp)
-                    .fillMaxWidth(), horizontalArrangement = Arrangement.Start, verticalAlignment = Alignment.Top){
+                Row (
+                    modifier = Modifier
+                        .padding(end = 50.dp, top = 8.dp, bottom = 8.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.Top
+                ){
                     Image(painter = painterResource(R.drawable.boy), contentDescription = "", modifier = Modifier.size(30.dp))
                     Spacer(Modifier.width(4.dp))
                     Column (horizontalAlignment = Alignment.Start) {
@@ -233,10 +246,4 @@ fun messageSendSection(){
 
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun chatPreview(){
-    //chats()
 }

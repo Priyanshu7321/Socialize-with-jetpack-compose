@@ -1,17 +1,15 @@
-package com.example.socialize.composables
+package com.example.socialize.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -42,17 +40,30 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.socialize.R
 import kotlin.random.Random
+import androidx.compose.foundation.layout.systemBarsPadding
 
 @Composable
 fun members(navController: NavController){
     var textval by remember { mutableStateOf("") }
-    Column (modifier = Modifier.fillMaxSize().padding(WindowInsets.systemBars.asPaddingValues())){
-        Row(modifier = Modifier.fillMaxWidth().padding(top = 10.dp, start = 15.dp, end = 15.dp), verticalAlignment = Alignment.CenterVertically){
-
-            Text(text = "Chat", style = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Black))
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .systemBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ){
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ){
+            Text(
+                text = "Chat",
+                style = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            )
             Spacer(modifier = Modifier.weight(1f))
-            Card (modifier = Modifier){
-                Row (modifier = Modifier.padding(5.dp)){
+            Card(modifier = Modifier) {
+                Row(modifier = Modifier.padding(5.dp)) {
                     Image(
                         painter = painterResource(R.drawable.camera),
                         contentDescription = "",
@@ -63,15 +74,25 @@ fun members(navController: NavController){
             }
             Spacer(Modifier.width(8.dp))
             Image(
-                        painter = painterResource(R.drawable.boy),
-                        contentDescription = "",
-                        modifier = Modifier.size(40.dp)
+                painter = painterResource(R.drawable.boy),
+                contentDescription = "",
+                modifier = Modifier.size(40.dp)
             )
-
         }
-        Spacer(Modifier.height(18.dp))
-        Card(modifier = Modifier.padding(start = 10.dp, end = 10.dp), shape = RoundedCornerShape(30.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.elevatedCardElevation(7.dp)) {
-            Row (modifier = Modifier.fillMaxWidth().height(60.dp).padding(start = 10.dp, end = 10.dp), verticalAlignment = Alignment.CenterVertically){
+        Spacer(Modifier.height(16.dp))
+        Card(
+            modifier = Modifier.padding(vertical = 4.dp),
+            shape = RoundedCornerShape(30.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.elevatedCardElevation(7.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .padding(start = 10.dp, end = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ){
                 Image(imageVector = Icons.Filled.Search, contentDescription = "", modifier = Modifier.size(35.dp))
                 TextField(
                     value =textval,
@@ -89,10 +110,17 @@ fun members(navController: NavController){
             }
         }
         Spacer(Modifier.height(18.dp))
-        Text(text = "All messages", style = TextStyle(fontSize = 19.sp, color = Color.Gray), modifier = Modifier.padding(start = 10.dp))
-        Spacer(Modifier.height(8.dp))
-        Column(modifier=Modifier.weight(1f)){
-            chatMembers()
+        Text(
+            text = "All messages",
+            style = TextStyle(fontSize = 19.sp, color = Color.Gray),
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = 4.dp)
+        ){
+            chatMembers(navController)
         }
     }
 }
@@ -112,29 +140,26 @@ fun generateRandomMembers(count: Int): List<member> {
 }
 var memberList= generateRandomMembers(17)
 @Composable
-fun chatMembers(){
-    LazyColumn(modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp)) {
-        items(memberList){
-            member->
-            Row (modifier = Modifier.height(60.dp), verticalAlignment = Alignment.CenterVertically){
+fun chatMembers(navController: NavController){
+    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+        items(memberList){ member ->
+            Row(
+                modifier = Modifier
+                    .height(60.dp)
+                    .clickable(enabled = true, onClick = {navController.navigate("chats")})
+                    .padding(vertical = 6.dp, horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ){
                 Image(painter = painterResource(R.drawable.boy), contentDescription = "", modifier = Modifier.size(55.dp))
-                Spacer(Modifier.width(9.dp))
-                Column (modifier = Modifier.padding(top = 5.dp)){
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.padding(top = 5.dp)){
                     Text(text = member.name, style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold))
                     Text(text = member.msg, style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Gray))
                 }
                 Spacer(Modifier.weight(1f))
                 Text(text = member.time, style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Gray))
-
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi =true)
-@Composable
-fun memberPreview(){
-    var navController= rememberNavController()
-    members(navController)
 }
