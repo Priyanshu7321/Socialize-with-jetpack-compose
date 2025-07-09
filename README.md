@@ -179,24 +179,6 @@ The app uses a custom color palette with:
 The app requires the following permissions:
 - **Internet**: For network communication and API calls
 
-## 🧪 Testing
-
-### Unit Tests
-Run unit tests using:
-```bash
-./gradlew test
-```
-
-### Instrumented Tests
-Run instrumented tests using:
-```bash
-./gradlew connectedAndroidTest
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🤝 Contributing
 
 1. Fork the repository
