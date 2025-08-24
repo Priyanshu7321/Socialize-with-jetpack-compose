@@ -12,12 +12,7 @@
           "package_name": "com.example.socialize"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "603761682281-uqd8soq3k9pkqv6p6qotlu00mo12p9l8.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
           "current_key": "AIzaSyAKGcNk-DteO88OwilcO6DWFxbtYf9D5fo"
@@ -25,12 +20,7 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "603761682281-uqd8soq3k9pkqv6p6qotlu00mo12p9l8.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

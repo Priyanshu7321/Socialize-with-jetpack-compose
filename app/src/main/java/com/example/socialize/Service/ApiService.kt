@@ -15,6 +15,9 @@ import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Query
 
+import com.example.socialize.data.model.SocialSignInRequest
+import com.example.socialize.data.model.SocialSignInResponse
+
 interface ApiService {
     @POST("login")
     suspend fun login(@Body user: UserPassword): Response<Map<String, String>>
@@ -41,6 +44,12 @@ interface ApiService {
     suspend fun getGroupChat(
         @Query("groupId") groupId:String
     ): Response<List<Message>>
+
+    @GET("getUserGroups")
+    suspend fun getUserGroups(@Query("userId") userId: String): Response<List<GroupChat>>
+    
+    @POST("auth/social")
+    suspend fun socialSignIn(@Body request: SocialSignInRequest): Response<Map<String, String>>
 
     @Multipart
     @POST("file/upload/post")

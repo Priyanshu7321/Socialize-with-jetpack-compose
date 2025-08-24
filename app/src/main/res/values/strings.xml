@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Socialize</string>
+    <string name="default_web_client_id" translatable="false">603761682281-uqd8soq3k9pkqv6p6qotlu00mo12p9l8.apps.googleusercontent.com</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>

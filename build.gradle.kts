@@ -1,6 +1,10 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     extra["compose_ui_version"] = "1.4.0-beta02"
+    
+    dependencies {
+        classpath("com.google.firebase:firebase-crashlytics-gradle:2.9.9")
+    }
 }
 
 plugins {

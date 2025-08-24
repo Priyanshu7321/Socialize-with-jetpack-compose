@@ -1,88 +1,67 @@
 package com.example.socialize
 
+import android.app.Activity
+import android.content.Context
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.example.socialize.viewmodel.NetworkViewModel
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.socialize.auth.GoogleAuthUiClient
 import com.example.socialize.composables.home
-import com.example.socialize.composables.homeContent
 import com.example.socialize.entity.UserPassword
-import com.example.socialize.screens.SwipeableCards
-import com.example.socialize.screens.Users
-import com.example.socialize.screens.chats
-import com.example.socialize.screens.members
-import com.example.socialize.screens.post
-import com.example.socialize.screens.profileforother
-import com.example.socialize.screens.profileforus
-import com.example.socialize.screens.videoView
+import com.example.socialize.ui.components.ErrorDialog
 import com.example.socialize.ui.theme.SocializeTheme
-import com.example.socialize.viewmodel.NetworkViewModel
+import com.example.socialize.viewmodel.AuthState
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.ExperimentalFoundationApi
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.CoroutineScope
 
 @AndroidEntryPoint
 class SignAndLogin : ComponentActivity() {
@@ -118,15 +97,66 @@ class SignAndLogin : ComponentActivity() {
         }
     }
 }
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginSignUp(navController: NavController,networkViewModel: NetworkViewModel= hiltViewModel()) {
+fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel = hiltViewModel()) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val isLoading by networkViewModel.isLoading
+    
+    // Observe auth state
+    val authState by networkViewModel.authState.collectAsState()
+    
+    // Show success/error dialogs and handle navigation
+    LaunchedEffect(authState) {
+        when (val state = authState) {
+            is AuthState.Success -> {
+                // Show success message
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                
+                // Navigate to home on success with a small delay to show the success message
+                Handler(Looper.getMainLooper()).postDelayed({
+                    navController.navigate("home") {
+                        popUpTo(0) { inclusive = true } // Clear back stack
+                    }
+                }, 500)
+            }
+            is AuthState.Error -> {
+                // Show error dialog
+                if (state.message.isNotBlank()) {
+                    Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+                }
+            }
+            is AuthState.Loading -> {
+                // Show loading state if needed
+            }
+            else -> {}
+        }
+    }
+    val googleAuthUiClient = remember { GoogleAuthUiClient(context) }
+    
+    // One Tap launcher
+    val oneTapLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            coroutineScope.launch {
+                val signInResult = googleAuthUiClient.signInWithIntent(result.data!!)
+                signInResult.onSuccess { data ->
+                    networkViewModel.signInWithGoogle(data.idToken)
+                }.onFailure { e ->
+                    Toast.makeText(context, e.message ?: "Google Sign-In failed", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
     var selectedSection by remember { mutableStateOf("Sign Up") }
     val scrollState = rememberScrollState()
-    val isLoading by networkViewModel.isLoading
     Box(modifier = Modifier.background(color = Color.White).fillMaxSize()) {
         Column(
             modifier = Modifier
-                .padding(start = 30.dp, end = 30.dp, top = 10.dp)
+                .padding(start = 20.dp, end = 20.dp, top = 5.dp)
                 .fillMaxSize()
                 .background(color = Color.White)
                 .verticalScroll(scrollState) // Apply vertical scrolling
@@ -171,11 +201,36 @@ fun LoginSignUp(navController: NavController,networkViewModel: NetworkViewModel=
             Row(modifier = Modifier
                 .height(60.dp)
                 .fillMaxWidth()) {
+                if (isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.5f))
+                            .wrapContentSize(Alignment.Center)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(50.dp),
+                            color = Color.White
+                        )
+                    }
+                }
                 Card(
                     modifier = Modifier
                         .weight(1f)
                         .height(50.dp)
-                        .padding(3.dp),
+                        .padding(3.dp)
+                        .clickable(
+                            indication = rememberRipple(),
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {
+                            handleGoogleSignIn(
+                                isLoading = isLoading,
+                                context = context,
+                                coroutineScope = coroutineScope,
+                                googleAuthUiClient = googleAuthUiClient,
+                                oneTapLauncher = oneTapLauncher
+                            )
+                        },
                     shape = RoundedCornerShape(30.dp),
                     border = BorderStroke(width = 1.dp, color = Color.Gray),
                     colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -193,26 +248,31 @@ fun LoginSignUp(navController: NavController,networkViewModel: NetworkViewModel=
                         Text(text = " Google")
                     }
                 }
-                Card(
+                // Facebook button (hidden but kept for future use)
+                Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .height(50.dp)
-                        .padding(3.dp),
-                    shape = RoundedCornerShape(30.dp),
-                    border = BorderStroke(width = 1.dp, color = Color.Gray),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                        .size(0.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                    Card(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(3.dp),
+                        shape = RoundedCornerShape(30.dp),
+                        border = BorderStroke(width = 1.dp, color = Color.Gray),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        Image(
-                            painter = painterResource(R.drawable.facebook),
-                            contentDescription = "",
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Text(text = " Facebook")
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(R.drawable.facebook),
+                                contentDescription = "",
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(text = " Facebook")
+                        }
                     }
                 }
             }
@@ -240,13 +300,30 @@ fun LoginSignUp(navController: NavController,networkViewModel: NetworkViewModel=
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hiltViewModel()) {
+    val context = LocalContext.current
+    val isLoading by networkViewModel.isLoading
+    val coroutineScope = rememberCoroutineScope()
+    val googleAuthUiClient = remember { GoogleAuthUiClient(context) }
+    val oneTapLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            val data = result.data!!
+            coroutineScope.launch {
+                val signInResult = googleAuthUiClient.signInWithIntent(data)
+                signInResult.onSuccess { res ->
+                    networkViewModel.signInWithGoogle(res.idToken)
+                }.onFailure { e ->
+                    Toast.makeText(context, e.message ?: "Google Sign-In failed", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
     var name by remember { mutableStateOf("") }
     var email by remember{ mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val isResponseSuccessfulorNot = networkViewModel.isresponseSuccessfulorNot
-    val isLoading by networkViewModel.isLoading
-    val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val isResponseSuccessfulorNot = networkViewModel.isResponseSuccessfulOrNot
     LaunchedEffect(isResponseSuccessfulorNot.value) {
         if(isResponseSuccessfulorNot.value){
             navController.navigate("home") {
@@ -384,9 +461,16 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
             .fillMaxWidth()
             .height(50.dp)
             .combinedClickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() },
                 onClick = {
-                    Toast.makeText(context, "SignUp Click", Toast.LENGTH_SHORT).show()
-                    networkViewModel.authenticate(UserPassword(email, password), checkMethod = "signup")
+                    handleGoogleSignIn(
+                        isLoading = isLoading,
+                        context = context,
+                        coroutineScope = coroutineScope,
+                        googleAuthUiClient = googleAuthUiClient,
+                        oneTapLauncher = oneTapLauncher
+                    )
                 },
                 onLongClick = {
                     Toast.makeText(context, "SignUp Long Click", Toast.LENGTH_SHORT).show()
@@ -418,12 +502,14 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
         Row (modifier = Modifier
             .fillMaxWidth()
             .height(1.dp)
+            .padding(end=10.dp)
             .weight(1f)
             .background(color = Color.Gray)){}
         Text(text = "Or Sign up with", style = TextStyle(color = Color.Gray))
         Row (modifier = Modifier
             .fillMaxWidth()
             .height(1.dp)
+            .padding(start=10.dp)
             .weight(1f)
             .background(color = Color.Gray)){}
     }
@@ -440,17 +526,37 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
 fun Login(navController: NavController, networkViewModel: NetworkViewModel = hiltViewModel()) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val isResponseSuccessfulorNot = networkViewModel.isresponseSuccessfulorNot
+    var showErrorDialog by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+    
+    val authState by networkViewModel.authState.collectAsState()
     val isLoading by networkViewModel.isLoading
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
-    LaunchedEffect(isResponseSuccessfulorNot.value) {
-        if(isResponseSuccessfulorNot.value){
-            navController.navigate("home") {
-                popUpTo("LoginSignUp") { inclusive = true }
-                launchSingleTop = true
+    
+    // Handle auth state changes
+    LaunchedEffect(authState) {
+        when (val state = authState) {
+            is AuthState.Success -> {
+                navController.navigate("home") {
+                    popUpTo("LoginSignUp") { inclusive = true }
+                    launchSingleTop = true
+                }
             }
+            is AuthState.Error -> {
+                errorMessage = state.message
+                showErrorDialog = true
+            }
+            else -> {}
         }
+    }
+    
+    // Show error dialog if needed
+    if (showErrorDialog) {
+        ErrorDialog(
+            message = errorMessage,
+            onDismiss = { showErrorDialog = false }
+        )
     }
     Text(
         text = "Email",
@@ -508,58 +614,119 @@ fun Login(navController: NavController, networkViewModel: NetworkViewModel = hil
         )
     }
     Spacer(Modifier.height(20.dp))
-    Card(
+    // Login Button
+    Button(
+        onClick = {
+            val userPassword = UserPassword(
+                username = email,
+                password = password
+            )
+            coroutineScope.launch {
+                networkViewModel.authenticate(userPassword, "login")
+            }
+        },
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp)
-            .padding(start = 10.dp, end = 10.dp)
-            .combinedClickable(
-                onClick = {
-                    Toast.makeText(context, "Login Click", Toast.LENGTH_SHORT).show()
-                    networkViewModel.authenticate(UserPassword(email, password), checkMethod = "login")
-                },
-                onLongClick = {
-                    Toast.makeText(context, "Login Long Click", Toast.LENGTH_SHORT).show()
-                    coroutineScope.launch {
-                        networkViewModel.saveTestCredentialsToDatastore(
-                            name = "abc",
-                            email = "abc@gmail.com",
-                            password = "12345678"
-                        )
-                        navController.navigate("home") {
-                            popUpTo("LoginSignUp") { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    }
-                }
-            ),
+            .padding(horizontal = 20.dp, vertical = 10.dp),
         shape = RoundedCornerShape(30.dp),
-        elevation = CardDefaults.elevatedCardElevation(10.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Magenta),
-        onClick = {}
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xFF4A80F5),
+            contentColor = Color.White,
+            disabledContainerColor = Color(0xFFA0A0A0),
+            disabledContentColor = Color.White
+        ),
+        enabled = !isLoading && email.isNotBlank() && password.isNotBlank()
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            Text(text = "Login", style = TextStyle(fontSize = 17.sp, color = Color.White))
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = Color.White,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Text(
+                text = "Login",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
-    if (isLoading) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.Magenta)
+
+    // Test Credentials Button (for development)
+    if (BuildConfig.DEBUG) {
+        TextButton(
+            onClick = {
+                coroutineScope.launch {
+                    networkViewModel.saveTestCredentialsToDatastore(
+                        name = "Test User",
+                        email = "test@example.com",
+                        password = "test123"
+                    )
+                    email = "test@example.com"
+                    password = "test123"
+                }
+            },
+            modifier = Modifier.padding(top = 8.dp)
+        ) {
+            Text("Use Test Account")
         }
     }
-    Spacer(Modifier.height(20.dp))
-    Row (verticalAlignment = Alignment.CenterVertically){
-        Row (modifier = Modifier
+    // Forgot Password Text
+    TextButton(
+        onClick = {
+            // TODO: Implement forgot password flow
+            Toast.makeText(context, "Forgot Password Clicked", Toast.LENGTH_SHORT).show()
+        },
+        modifier = Modifier.padding(top = 8.dp)
+    ) {
+        Text("Forgot Password?")
+    }
+    
+    Spacer(modifier = Modifier.height(16.dp))
+    
+    // Sign Up Suggestion
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("Don't have an account? ")
+        TextButton(
+            onClick = {
+                // This will be handled by the parent composable to switch to signup
+            }
+        ) {
+            Text("Sign Up", color = Color(0xFF4A80F5), fontWeight = FontWeight.Bold)
+        }
+    }
+    
+    // Divider with "Or login with" text
+    Row(
+        modifier = Modifier
             .fillMaxWidth()
-            .height(1.dp)
-            .weight(1f)
-            .background(color = Color.Gray)){}
-        Text(text = "Or login with", style = TextStyle(color = Color.Gray))
-        Row (modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .weight(1f)
-            .background(color = Color.Gray)){}
+            .padding(vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Divider(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 10.dp),
+            color = Color.Gray,
+            thickness = 1.dp
+        )
+        Text(
+            text = "Or login with",
+            style = TextStyle(color = Color.Gray),
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
+        Divider(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 10.dp),
+            color = Color.Gray,
+            thickness = 1.dp
+        )
     }
 }
 @Composable
@@ -605,6 +772,30 @@ fun CustomAppBar(selectedSection: String, onSectionSelected: (String) -> Unit) {
                 text = "Log In",
                 style = MaterialTheme.typography.bodyLarge
             )
+        }
+    }
+}
+
+internal fun handleGoogleSignIn(
+    isLoading: Boolean,
+    context: Context,
+    coroutineScope: CoroutineScope,
+    googleAuthUiClient: GoogleAuthUiClient,
+    oneTapLauncher: ActivityResultLauncher<IntentSenderRequest>
+) {
+    if (isLoading) return
+
+    coroutineScope.launch {
+        val intentSender = googleAuthUiClient.beginSignIn()
+        if (intentSender != null) {
+            try {
+                oneTapLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
+            } catch (e: Exception) {
+                Log.e("GoogleSignIn", "Failed to launch One Tap", e)
+                Toast.makeText(context, "Failed to launch Google Sign-In", Toast.LENGTH_LONG).show()
+            }
+        } else {
+            Toast.makeText(context, "Unable to start Google One Tap", Toast.LENGTH_LONG).show()
         }
     }
 }

@@ -3,6 +3,8 @@ package com.example.socialize.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -53,7 +55,11 @@ fun SwipeableCards(navController: NavController) {
             count.value++
         }
     }
-    Box(modifier = Modifier.height(screenHeight.dp).width(screenWidth.dp).clickable(onClick = {count.value++}).background(color=Color.White.copy(alpha=0.2f)).systemBarsPadding()){
+    Box(modifier = Modifier.height(screenHeight.dp).width(screenWidth.dp).clickable(
+        indication = LocalIndication.current,
+        interactionSource = remember { MutableInteractionSource() },
+        onClick = { count.value++ }
+    ).background(color=Color.White.copy(alpha=0.2f)).systemBarsPadding()){
         Row(Modifier.fillMaxWidth()) {
             progressList.indices.forEach {index->
                 LinearProgressIndicator(

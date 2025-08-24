@@ -6,6 +6,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -245,7 +247,10 @@ fun BottomNavigationBar(navController: NavController, selectedIcon: String, onIc
                 .clip(shape = CircleShape)
                 .background(color = Color.White)
                 .align(Alignment.Center)
-                .clickable { navController.navigate("posting") },
+                .clickable(
+                    indication = LocalIndication.current,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { navController.navigate("posting") },
             shape = CircleShape,
             elevation = CardDefaults.elevatedCardElevation(8.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xfff89b29))
@@ -280,7 +285,10 @@ fun IconWithSelection(
             .background(
                 color = if (isSelected) Color.Gray.copy(alpha = 0.5f) else Color.Transparent,
                 shape = CircleShape
-            ).clickable { onClick() }
+            ).clickable(
+                indication = LocalIndication.current,
+                interactionSource = remember { MutableInteractionSource() }
+            ) { onClick() }
             .shadow(if (isAddButton) 8.dp else 0.dp, CircleShape)
             .padding(8.dp),
         contentAlignment = Alignment.Center
@@ -410,11 +418,16 @@ fun postList(navController: NavController){
                     Row (modifier = Modifier
                         .height(60.dp)
                         .padding(4.dp)){
-                        Image(painter = rememberAsyncImagePainter( (R.drawable.boy)), contentDescription ="" , modifier = Modifier.size(50.dp).clickable(enabled = true, onClick = {
+                        Image(painter = rememberAsyncImagePainter( (R.drawable.boy)), contentDescription ="" , modifier = Modifier.size(50.dp).clickable(
+                            indication = LocalIndication.current,
+                            interactionSource = remember { MutableInteractionSource() },
+                            enabled = true,
+                            onClick = {
                             navController.navigate("profileforother") {
                                 launchSingleTop = true
                             }
-                        }))
+                        }
+                        ))
                         Column(modifier = Modifier
                             .fillMaxHeight()
                             .padding(start = 5.dp), verticalArrangement = Arrangement.Center) {
@@ -540,11 +553,16 @@ fun TopBar(navController: NavController) {
         AsyncImage(
             model = R.drawable.boy,
             contentDescription = "",
-            modifier = Modifier.size(50.dp).clickable(enabled = true, onClick = {
+            modifier = Modifier.size(50.dp).clickable(
+                indication = LocalIndication.current,
+                interactionSource = remember { MutableInteractionSource() },
+                enabled = true,
+                onClick = {
                 navController.navigate("profile") {
                     launchSingleTop = true
                 }
-            }),
+            }
+            ),
         )
         Spacer(modifier = Modifier.width(5.dp))
 
@@ -587,7 +605,11 @@ fun TabButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         ),
-        modifier = Modifier.clickable(onClick = onClick)
+        modifier = Modifier.clickable(
+            indication = LocalIndication.current,
+            interactionSource = remember { MutableInteractionSource() },
+            onClick = onClick
+        )
     )
 }
 

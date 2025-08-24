@@ -2,6 +2,8 @@ package com.example.socialize.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -146,7 +148,12 @@ fun chatMembers(navController: NavController){
             Row(
                 modifier = Modifier
                     .height(60.dp)
-                    .clickable(enabled = true, onClick = {navController.navigate("chats")})
+                    .clickable(
+                        indication = LocalIndication.current,
+                        interactionSource = remember { MutableInteractionSource() },
+                        enabled = true,
+                        onClick = { navController.navigate("chats") }
+                    )
                     .padding(vertical = 6.dp, horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ){

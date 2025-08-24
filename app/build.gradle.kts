@@ -5,18 +5,19 @@ plugins {
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
     namespace = "com.example.socialize"
-    compileSdk = 35
+    compileSdk = 36
 
     ndkVersion = "26.1.10909125"
 
     defaultConfig {
         applicationId = "com.example.socialize"
         minSdk = 25
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -50,7 +51,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
 
     kotlinOptions {
@@ -60,15 +61,33 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // Resolve duplicate META-INF files from transitive dependencies (e.g., Apache HttpComponents)
+    packaging {
+        resources {
+            excludes += setOf(
+                "/META-INF/DEPENDENCIES",
+                "/META-INF/LICENSE",
+                "/META-INF/LICENSE.txt",
+                "/META-INF/license.txt",
+                "/META-INF/NOTICE",
+                "/META-INF/NOTICE.txt",
+                "/META-INF/notice.txt",
+                "/META-INF/ASL2.0"
+            )
+        }
+    }
 }
 
 dependencies {
+    // Compose BOM must come BEFORE any Compose artifacts
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.foundation)
     val room_version = "2.6.1"
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
@@ -109,9 +128,16 @@ dependencies {
     //Retrofit service
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
-    implementation("com.google.firebase:firebase-crashlytics-ndk")
-    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-crashlytics-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+    
+    // Google Sign In
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    
+    // Google API Client removed: using Retrofit for API calls and Play Services/Firebase for auth
 
 }
 kapt {

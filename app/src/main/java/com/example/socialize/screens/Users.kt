@@ -18,6 +18,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,20 +49,54 @@ fun Users(navController: NavController) {
         modifier = Modifier.systemBarsPadding()
     ) {
         Row(
-            Modifier.height(40.dp).fillMaxWidth().padding(start = 20.dp, end = 20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(painter = painterResource(R.drawable.back), contentDescription = "", Modifier.size(25.dp))
-            Card(elevation = CardDefaults.elevatedCardElevation(3.dp)) {
+            Image(
+                painter = painterResource(R.drawable.back),
+                contentDescription = "Back",
+                Modifier
+                    .size(25.dp)
+                    .clickable { navController.popBackStack() }
+            )
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 48.dp),
+                elevation = CardDefaults.elevatedCardElevation(3.dp),
+                shape = RoundedCornerShape(24.dp)
+            ) {
                 TextField(
                     value = text,
                     onValueChange = { text = it },
-                    colors = TextFieldDefaults.colors(unfocusedContainerColor = Color.White),
-                    label = { Text("Search User, Groups, Influencer") }
+                    singleLine = true,
+                    textStyle = TextStyle(fontSize = 14.sp),
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.White,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent
+                    ),
+                    placeholder = {
+                        Text(
+                            "Search users, groups, influencers",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            fontSize = 12.sp
+                        )
+                    }
                 )
             }
-            Image(painter = painterResource(R.drawable.menulist), contentDescription = "", Modifier.size(25.dp))
+            Image(
+                painter = painterResource(R.drawable.menulist),
+                contentDescription = "",
+                Modifier.size(25.dp)
+            )
         }
         Spacer(Modifier.height(8.dp))
         LazyVerticalStaggeredGrid(columns = StaggeredGridCells.Adaptive(minSize = 180.dp), modifier = Modifier.fillMaxSize()) {
