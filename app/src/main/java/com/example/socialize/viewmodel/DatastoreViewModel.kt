@@ -23,9 +23,10 @@ class DatastoreViewModel @Inject constructor(
         return datastoreRepository.getStringFlow(key)
     }
 
-    private fun saveString(key: Preferences.Key<String>, value: String) {
+    private fun saveString(key: Preferences.Key<Any>, value: Any) {
+
         viewModelScope.launch {
-            datastoreRepository.saveString(key,value)
+//            datastoreRepository.saveString(key ,valuea)
         }
     }
 }

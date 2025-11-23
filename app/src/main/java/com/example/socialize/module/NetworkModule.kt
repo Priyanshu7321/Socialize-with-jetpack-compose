@@ -12,6 +12,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import com.example.socialize.BuildConfig
+import com.example.socialize.service.HostSelectionInterceptor
+import okhttp3.OkHttpClient
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -19,16 +21,30 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit {
+    fun provideHostInterceptor() = HostSelectionInterceptor()
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(hostInterceptor: HostSelectionInterceptor): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(hostInterceptor)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(
+        client: OkHttpClient
+    ): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL)
+            .baseUrl("http://default.com/")   // dummy, required Bahi!
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService {
-        return retrofit.create(ApiService::class.java)
-    }
+    fun provideApiService(retrofit: Retrofit): ApiService =
+        retrofit.create(ApiService::class.java)
 }

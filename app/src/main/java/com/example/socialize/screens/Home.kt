@@ -43,7 +43,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,14 +60,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.socialize.R
 import com.example.socialize.screens.Users
@@ -79,24 +76,11 @@ import com.example.socialize.screens.videoView
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import com.example.socialize.screens.Users
-import com.example.socialize.screens.members
-import com.example.socialize.screens.profileforother
-import com.example.socialize.screens.profileforus
-import com.example.socialize.screens.videoView
-import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
@@ -133,8 +117,7 @@ fun home() {
         Box(
             modifier = Modifier
                 .background(color = Color.White)
-                .fillMaxSize()
-                .systemBarsPadding(),
+                .fillMaxSize(),
             contentAlignment = Alignment.BottomCenter
         ) {
             BackHandler {
@@ -344,44 +327,50 @@ fun discoverList(statusList: List<Status>) {
         "Karen", "Leo", "Mona", "Nina", "Oscar",
         "Paul", "Quinn", "Rita", "Steve", "Tina"
     )
-
-    LazyRow(
-        state = infiniteState,
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .height(80.dp),
+        contentAlignment = Alignment.Center
     ) {
-        items(statusList.size * 10) { index -> // Only repeat 10 times to avoid Int.MAX_VALUE
-            val actualIndex = index % statusList.size
-            val status = statusList[actualIndex] // Get the actual item
+        LazyRow(
+            state = infiniteState,
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            items(statusList.size * 10) { index -> // Only repeat 10 times to avoid Int.MAX_VALUE
+                val actualIndex = index % statusList.size
+                val status = statusList[actualIndex] // Get the actual item
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(55.dp)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(horizontal = 8.dp)
                 ) {
-                    GradientCircle() // Cached composable for smooth performance
-
-                    // Image
-                    Card(
+                    Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(4.dp),
-                        shape = CircleShape,
-                        elevation = CardDefaults.elevatedCardElevation(4.dp)
+                            .size(55.dp)
                     ) {
-                        AsyncImage(
-                            model = R.drawable.woman, // Use Coil for better caching
-                            contentDescription = "",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        GradientCircle() // Cached composable for smooth performance
+
+                        // Image
+                        Card(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(4.dp),
+                            shape = CircleShape,
+                            elevation = CardDefaults.elevatedCardElevation(4.dp)
+                        ) {
+                            AsyncImage(
+                                model = R.drawable.woman, // Use Coil for better caching
+                                contentDescription = "",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
+                    Text(names[actualIndex % names.size], fontSize = 12.sp)
                 }
-                Text(names[actualIndex % names.size], fontSize = 12.sp)
             }
         }
     }
@@ -403,14 +392,14 @@ fun postList(navController: NavController){
 
     LazyColumn(modifier = Modifier
         .fillMaxHeight()
-        .padding(top = 15.dp)) {
+        .padding(top = 5.dp)) {
         items(20){
                 it->
             val cardColor = generateRandomColor()
             val scrollState = rememberScrollState()
             Card (modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 5.dp, end = 5.dp, top = 10.dp)
+                .padding(start = 5.dp, end = 5.dp, top = 5.dp)
                 .background(Color.White),
                 shape = RoundedCornerShape(30.dp),
                 elevation = CardDefaults.elevatedCardElevation(4.dp), colors = CardDefaults.cardColors(containerColor = cardColor)) {
@@ -497,7 +486,7 @@ fun homeContent(navController: NavController) {
     var colorState by remember { mutableStateOf("Discover") }
 
     Column(
-        modifier = Modifier.systemBarsPadding().padding(top = 15.dp, start = 10.dp, end = 10.dp)
+        modifier = Modifier.padding( start = 10.dp, end = 10.dp)
     ) {
         TopBar(navController)
         Spacer(modifier = Modifier.height(10.dp))
@@ -507,7 +496,7 @@ fun homeContent(navController: NavController) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        Row {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.height(80.dp)) {
             ProfileBox()
             Spacer(Modifier.width(1.dp))
             discoverList(stateList)
@@ -532,7 +521,7 @@ fun TopBar(navController: NavController) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            model = R.drawable.letters,
+            model = R.drawable.socializeicon,
             contentDescription = "",
             modifier = Modifier.size(40.dp)
         )
@@ -553,7 +542,7 @@ fun TopBar(navController: NavController) {
         AsyncImage(
             model = R.drawable.boy,
             contentDescription = "",
-            modifier = Modifier.size(50.dp).clickable(
+            modifier = Modifier.size(40.dp).clickable(
                 indication = LocalIndication.current,
                 interactionSource = remember { MutableInteractionSource() },
                 enabled = true,

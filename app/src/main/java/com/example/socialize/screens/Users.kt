@@ -46,7 +46,7 @@ fun Users(navController: NavController) {
     }
     var text by remember { mutableStateOf("") }
     Column(
-        modifier = Modifier.systemBarsPadding()
+        modifier = Modifier
     ) {
         Row(
             Modifier
@@ -149,4 +149,10 @@ fun UserCard(user: UserProfile, navController: NavController) {
             }
         }
     }
+}
+@Preview(showSystemUi = true, showBackground = true)
+@Composable
+fun showVideoView1(){
+    var navController= rememberNavController()
+    Users(navController)
 }

@@ -50,13 +50,12 @@ fun members(navController: NavController){
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .systemBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 5.dp)
     ){
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 8.dp),
+                .padding(top = 10.dp, bottom = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ){
             Text(
@@ -81,7 +80,7 @@ fun members(navController: NavController){
                 modifier = Modifier.size(40.dp)
             )
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(6.dp))
         Card(
             modifier = Modifier.padding(vertical = 4.dp),
             shape = RoundedCornerShape(30.dp),
@@ -111,7 +110,7 @@ fun members(navController: NavController){
                 )
             }
         }
-        Spacer(Modifier.height(18.dp))
+        Spacer(Modifier.height(12.dp))
         Text(
             text = "All messages",
             style = TextStyle(fontSize = 19.sp, color = Color.Gray),
@@ -169,4 +168,10 @@ fun chatMembers(navController: NavController){
             Spacer(Modifier.height(8.dp))
         }
     }
+}
+@Preview(showSystemUi = true, showBackground = true)
+@Composable
+fun showVideoView2(){
+    var navController= rememberNavController()
+    members(navController)
 }

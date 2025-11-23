@@ -1,5 +1,6 @@
 package com.example.socialize.screens
 
+import android.widget.ScrollView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,42 +42,23 @@ import androidx.navigation.compose.rememberNavController
 @Composable
 fun videoView(navController: NavController) {
     val interests = listOf(
-        "Gaming",
-        "Music",
-        "Travel",
-        "Foodie",
-        "Movies",
-        "Sports",
-        "Reading",
-        "Art",
-        "Photography",
-        "Fitness",
-        "Tech",
-        "Coding",
-        "Nature",
-        "Dancing",
-        "Cooking",
-        "Anime",
-        "Pets",
-        "Meditation",
-        "Fashion",
-        "Blogging",
-        "Volunteering",
-        "DIY",
-        "Astronomy",
-        "Podcasts"
+        "Gaming", "Music", "Travel", "Foodie", "Movies", "Sports", "Reading", "Art",
+        "Photography", "Fitness", "Tech", "Coding", "Nature", "Dancing", "Cooking",
+        "Anime", "Pets", "Meditation", "Fashion", "Blogging", "Volunteering", "DIY",
+        "Astronomy", "Podcasts"
     )
 
     val selectedInterests = remember { mutableStateListOf("Sports", "Art") }
-    var scrollState = rememberScrollState()
-    Box() {
+    val scrollState = rememberScrollState()
+
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(10.dp)
+                .padding(bottom = 80.dp), // Extra padding for the button
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Card(
                 modifier = Modifier
@@ -84,7 +66,7 @@ fun videoView(navController: NavController) {
                     .height(130.dp)
                     .padding(5.dp),
                 shape = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp), // Increase if needed
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
                 Row(
@@ -122,67 +104,61 @@ fun videoView(navController: NavController) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "Select Your Interests",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Choose topics that excite you to find better matches for your calls.",
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    lineHeight = 18.sp
-                )
+            Text(
+                text = "Select Your Interests",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Choose topics that excite you to find better matches for your calls.",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(horizontal = 16.dp),
+                lineHeight = 18.sp
+            )
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    for (row in interests.chunked(2)) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.padding(vertical = 6.dp)
-                        ) {
-                            for (interest in row) {
-                                val isSelected = interest in selectedInterests
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier
-                                        .border(
-                                            width = 1.dp,
-                                            color = if (isSelected) Color(0xFF6200EE) else Color.Gray,
-                                            shape = RoundedCornerShape(50)
-                                        )
-                                        .background(
-                                            color = if (isSelected) Color(0x336200EE) else Color.Transparent,
-                                            shape = RoundedCornerShape(50)
-                                        )
-                                        .clickable {
-                                            if (isSelected) selectedInterests.remove(interest) else selectedInterests.add(
-                                                interest
-                                            )
-                                        }
-                                        .padding(horizontal = 24.dp, vertical = 12.dp)
-                                ) {
-                                    Text(
-                                        text = interest,
-                                        fontSize = 14.sp,
-                                        color = if (isSelected) Color(0xFF6200EE) else Color.Black
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                for (row in interests.chunked(2)) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.padding(vertical = 6.dp)
+                    ) {
+                        for (interest in row) {
+                            val isSelected = interest in selectedInterests
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .border(
+                                        width = 1.dp,
+                                        color = if (isSelected) Color(0xFF6200EE) else Color.Gray,
+                                        shape = RoundedCornerShape(50)
                                     )
-                                }
+                                    .background(
+                                        color = if (isSelected) Color(0x336200EE) else Color.Transparent,
+                                        shape = RoundedCornerShape(50)
+                                    )
+                                    .clickable {
+                                        if (isSelected) selectedInterests.remove(interest)
+                                        else selectedInterests.add(interest)
+                                    }
+                                    .padding(horizontal = 24.dp, vertical = 12.dp)
+                            ) {
+                                Text(
+                                    text = interest,
+                                    fontSize = 14.sp,
+                                    color = if (isSelected) Color(0xFF6200EE) else Color.Black
+                                )
                             }
                         }
                     }
                 }
             }
-
-
         }
+
+        // Button stays fixed at bottom
         Button(
             onClick = { /* Start video call logic */ },
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -208,6 +184,7 @@ fun videoView(navController: NavController) {
         }
     }
 }
+
 
 @Preview(showSystemUi = true, showBackground = true)
 @Composable

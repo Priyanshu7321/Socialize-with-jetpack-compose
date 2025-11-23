@@ -8,15 +8,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import com.example.socialize.entity.UserPassword
 
-sealed class AuthResult {
-    data class Success(val data: Map<String, String>) : AuthResult()
-    data class Error(val exception: Throwable) : AuthResult()
+interface ApiResponseListener {
+    fun Success( data: Map<String, String>)
+    fun Error(errorMsg: String)
 }
 
 @Singleton
 class AuthRepository @Inject constructor(private val apiService: ApiService) {
 
-    suspend fun authenticate(user: UserPassword, checkMethod: String): AuthResult {
+    suspend fun authenticate(user: UserPassword, checkMethod: String,listener: ApiResponseListener) {
         return try {
             val response = if (checkMethod == "signup") {
                 apiService.signup(user)
@@ -24,16 +24,16 @@ class AuthRepository @Inject constructor(private val apiService: ApiService) {
                 apiService.login(user)
             }
             if (response.isSuccessful) {
-                AuthResult.Success(response.body() ?: emptyMap())
+                listener.Success(response.body() ?: emptyMap())
             } else {
-                AuthResult.Error(HttpException(response))
+                listener.Error(response.errorBody().toString())
             }
         } catch (e: Exception) {
-            AuthResult.Error(e)
+            listener.Error("runtimeIssue");
         }
     }
 
-    suspend fun signInWithGoogle(idToken: String): AuthResult {
+    suspend fun signInWithGoogle(idToken: String,listener: ApiResponseListener) {
         return try {
             val request = SocialSignInRequest(
                 provider = "google",
@@ -43,15 +43,15 @@ class AuthRepository @Inject constructor(private val apiService: ApiService) {
             if (response.isSuccessful) {
                 val responseBody = response.body()
                 if (responseBody != null && responseBody["token"] != null) {
-                    AuthResult.Success(responseBody)
+                    listener.Success(responseBody)
                 } else {
-                    AuthResult.Error(Exception("Invalid response from server"))
+                    listener.Error("Invalid response from server")
                 }
             } else {
-                AuthResult.Error(HttpException(response))
+                listener.Error("invalid response")
             }
         } catch (e: Exception) {
-            AuthResult.Error(e)
+            listener.Error("invalid");
         }
     }
 }

@@ -38,18 +38,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
 import com.example.socialize.viewmodel.NetworkViewModel
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -59,51 +60,65 @@ import com.example.socialize.entity.UserPassword
 import com.example.socialize.ui.components.ErrorDialog
 import com.example.socialize.ui.theme.SocializeTheme
 import com.example.socialize.viewmodel.AuthState
+import com.google.firebase.BuildConfig
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineScope
 
 @AndroidEntryPoint
 class SignAndLogin : ComponentActivity() {
-//    val client = Client(context = this).setProject("677ec69a00172ea7c40a")
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                lightScrim = android.graphics.Color.parseColor("#2196F3"), // Light mode status bar
+                darkScrim = android.graphics.Color.parseColor("#0D47A1")   // Dark mode status bar (darker blue)
+            ),
+            navigationBarStyle = SystemBarStyle.auto(
+                lightScrim = android.graphics.Color.WHITE,                 // Light mode nav bar
+                darkScrim = android.graphics.Color.BLACK                   // Dark mode nav bar
+            )
+        )
+
         setContent {
             SocializeTheme {
                 val navController = rememberNavController()
-                    Scaffold(
+                Scaffold(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .systemBarsPadding()
+                ) { innerPadding ->
+                    NavHost(
+                        navController = navController,
+                        startDestination = "LoginSignUp",
                         modifier = Modifier
+                            .padding()
                             .fillMaxSize()
-                            .systemBarsPadding(),
-                    ) { innerPadding ->
-                        NavHost(
-                            navController = navController,
-                            startDestination = "LoginSignUp",
-                            modifier = Modifier.padding(innerPadding)
-                        ) {
-                            composable("LoginSignUp") {
-                                LoginSignUp(navController)
-                            }
-                            composable("home") {
-                                home()
-                            }
-
+                    ) {
+                        composable("LoginSignUp") {
+                            LoginSignUp(navController)
+                        }
+                        composable("home") {
+                            home()
                         }
                     }
                 }
+            }
         }
     }
 }
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val isLoading by networkViewModel.isLoading
-    
+    var showDialog by remember { mutableStateOf(false) }
     // Observe auth state
     val authState by networkViewModel.authState.collectAsState()
     
@@ -164,7 +179,7 @@ fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel
             Box(modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)) {
                 Row(modifier = Modifier.padding(start = 0.dp)) {
                     Image(
-                        painter = painterResource(R.drawable.letters),
+                        painter = painterResource(R.drawable.socializeicon),
                         contentDescription = "logo",
                         Modifier.size(40.dp)
                     )
@@ -178,7 +193,10 @@ fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel
 
             Text(
                 text = "Welcome to Socialize!",
-                style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 24.sp),
+                modifier = Modifier.clickable{
+                    showDialog=true
+                }
             )
             Spacer(modifier = Modifier.height(7.dp))
             Text(
@@ -196,7 +214,15 @@ fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel
                 Login(navController)
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            if(showDialog){
+                UrlInputDialog(
+                    onDismiss = { showDialog = false },
+                    onConfirm = { enteredUrl ->
+                       networkViewModel.updateBaseUrl(enteredUrl)
+                    }
+                )
+            }
+            Spacer(modifier = Modifier.height(5.dp))
 
             Row(modifier = Modifier
                 .height(60.dp)
@@ -296,6 +322,42 @@ fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel
         }
     }
 }
+
+//Dialog box for adding custom url
+@Composable
+fun UrlInputDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var url by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Enter Base URL") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = url,
+                    onValueChange = { url = it },
+                    label = { Text("Base URL") },
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onConfirm(url)
+                    onDismiss()
+                }
+            ) { Text("OK") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -475,11 +537,7 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
                 onLongClick = {
                     Toast.makeText(context, "SignUp Long Click", Toast.LENGTH_SHORT).show()
                     coroutineScope.launch {
-                        networkViewModel.saveTestCredentialsToDatastore(
-                            name = "abc",
-                            email = "abc@gmail.com",
-                            password = "12345678"
-                        )
+
                         navController.navigate("home") {
                             popUpTo("LoginSignUp") { inclusive = true }
                             launchSingleTop = true
@@ -615,43 +673,43 @@ fun Login(navController: NavController, networkViewModel: NetworkViewModel = hil
     }
     Spacer(Modifier.height(20.dp))
     // Login Button
-    Button(
-        onClick = {
-            val userPassword = UserPassword(
-                username = email,
-                password = password
-            )
-            coroutineScope.launch {
-                networkViewModel.authenticate(userPassword, "login")
-            }
-        },
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(50.dp)
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+            .combinedClickable(
+                indication = rememberRipple(),
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = {
+                    val userPassword = UserPassword(
+                        email = email,
+                        password = password
+                    )
+                    coroutineScope.launch {
+                        networkViewModel.authenticate(userPassword, "login")
+                    }
+                },
+                onLongClick = {
+                    Toast.makeText(context, "SignUp Long Click", Toast.LENGTH_SHORT).show()
+                    coroutineScope.launch {
+
+                        navController.navigate("home") {
+                            popUpTo("LoginSignUp") { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                }
+            ),
         shape = RoundedCornerShape(30.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF4A80F5),
-            contentColor = Color.White,
-            disabledContainerColor = Color(0xFFA0A0A0),
-            disabledContentColor = Color.White
-        ),
-        enabled = !isLoading && email.isNotBlank() && password.isNotBlank()
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
-                color = Color.White,
-                strokeWidth = 2.dp
-            )
-        } else {
-            Text(
-                text = "Login",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
+        elevation = CardDefaults.elevatedCardElevation(10.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Magenta),
+
+        ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Text(text = "Sign In", style = TextStyle(fontSize = 17.sp, color = Color.White))
         }
     }
+
 
     // Test Credentials Button (for development)
     if (BuildConfig.DEBUG) {
@@ -678,34 +736,18 @@ fun Login(navController: NavController, networkViewModel: NetworkViewModel = hil
             // TODO: Implement forgot password flow
             Toast.makeText(context, "Forgot Password Clicked", Toast.LENGTH_SHORT).show()
         },
-        modifier = Modifier.padding(top = 8.dp)
+        modifier = Modifier.padding(top = 4.dp)
     ) {
         Text("Forgot Password?")
     }
     
-    Spacer(modifier = Modifier.height(16.dp))
-    
-    // Sign Up Suggestion
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text("Don't have an account? ")
-        TextButton(
-            onClick = {
-                // This will be handled by the parent composable to switch to signup
-            }
-        ) {
-            Text("Sign Up", color = Color(0xFF4A80F5), fontWeight = FontWeight.Bold)
-        }
-    }
+
     
     // Divider with "Or login with" text
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Divider(

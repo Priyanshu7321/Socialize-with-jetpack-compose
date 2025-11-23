@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -43,32 +44,26 @@ fun post(navController: NavController){
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .systemBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .padding(horizontal = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-        Box(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)){
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(70.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ){
-                Text("Express your views", style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold))
-            }
+        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)){
             Image(
                 painter = painterResource(R.drawable.back),
                 contentDescription = "",
-                modifier = Modifier.size(20.dp).align(Alignment.CenterStart).offset(x = 20.dp)
+                modifier = Modifier.size(20.dp)
             )
+            Spacer(Modifier.size(10.dp))
+                Text("Express your views", style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold))
+
+
         }
         Card(
             modifier = Modifier
                 .width(300.dp)
                 .height(200.dp)
                 .padding(vertical = 12.dp),
-            elevation = CardDefaults.cardElevation(5.dp)
+            elevation = CardDefaults.cardElevation(2.dp)
         ) {
             Box(modifier = Modifier.fillMaxSize()){
                 Image(

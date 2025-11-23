@@ -1,10 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.Socialize" parent="android:Theme.Material.Light.NoActionBar" />
-    <!-- Base application theme. -->
+    <!-- ✅ Base application theme -->
     <style name="Base.Theme.Socialize" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- Customize your colors here if needed -->
+        <!-- <item name="colorPrimary">@color/purple_500</item> -->
     </style>
+
+    <!-- ✅ App theme with transparent system bars for edge-to-edge -->
+    <style name="Theme.Socialize" parent="Base.Theme.Socialize">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <!-- Set this to false if your background is dark (white icons), true if light (dark icons) -->
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">true</item>
+
+        <!-- Ensure content draws behind system bars -->
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+    </style>
+
 </resources>

@@ -1,5 +1,6 @@
 package com.example.socialize.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -71,6 +72,7 @@ fun OptimizedAsyncImage(
     )
 }
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun profileforus(navController: NavController){
     val midh = LocalConfiguration.current.screenHeightDp/2
@@ -80,7 +82,6 @@ fun profileforus(navController: NavController){
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .systemBarsPadding()
             .padding(horizontal = 5.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ){
@@ -93,7 +94,7 @@ fun profileforus(navController: NavController){
         ){
             Card(shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 20.dp, bottomStart = 20.dp)){
                 OptimizedAsyncImage(
-                    model = R.drawable.forest2, // Using smaller image (65KB instead of 2.4MB)
+                    model = R.drawable.forest2,
                     contentDescription = "",
                     modifier = Modifier.height(200.dp).fillMaxWidth(),
                     contentScale = ContentScale.Crop
