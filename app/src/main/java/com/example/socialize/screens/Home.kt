@@ -86,6 +86,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.socialize.screens.SwipeableCards
+import com.example.socialize.screens.VideoCallWebView
 import com.example.socialize.screens.chats
 import com.example.socialize.screens.post
 
@@ -157,6 +158,17 @@ fun home() {
                     }
                     composable("videoCall") {
                         videoView(navController)
+                    }
+                    composable(
+                        "videoCallWebView/{userId}/{otherUserId}",
+                        arguments = listOf(
+                            androidx.navigation.navArgument("userId") { type = androidx.navigation.NavType.StringType },
+                            androidx.navigation.navArgument("otherUserId") { type = androidx.navigation.NavType.StringType }
+                        )
+                    ) { backStackEntry ->
+                        val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                        val otherUserId = backStackEntry.arguments?.getString("otherUserId") ?: ""
+                        VideoCallWebView(navController, userId, otherUserId)
                     }
                     composable("users") {
                         Users(navController)

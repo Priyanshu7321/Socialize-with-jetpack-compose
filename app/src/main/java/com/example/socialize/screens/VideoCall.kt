@@ -160,7 +160,13 @@ fun videoView(navController: NavController) {
 
         // Button stays fixed at bottom
         Button(
-            onClick = { /* Start video call logic */ },
+            onClick = { 
+                // Navigate to video call screen
+                // Use random IDs for testing or implement user selection logic
+                val myId = "user_" + (1000..9999).random()
+                val otherId = "remote_user"
+                navController.navigate("videoCallWebView/$myId/$otherId")
+            },
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             contentPadding = PaddingValues(),
             modifier = Modifier

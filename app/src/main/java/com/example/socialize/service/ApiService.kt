@@ -19,10 +19,10 @@ import com.example.socialize.data.model.SocialSignInRequest
 import com.example.socialize.data.model.SocialSignInResponse
 
 interface ApiService {
-    @POST("login")
+    @POST("api/auth/login")
     suspend fun login(@Body user: UserPassword): Response<Map<String, String>>
 
-    @POST("signup")
+    @POST("api/auth/signup")
     suspend fun signup(@Body user: UserPassword): Response<Map<String, String>>
 
     @PATCH("update_record")

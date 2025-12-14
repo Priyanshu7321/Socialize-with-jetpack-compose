@@ -1,5 +1,8 @@
 package com.example.socialize.module
 
+import android.content.Context
+import com.chuckerteam.chucker.api.ChuckerCollector
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.example.socialize.service.ApiService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -13,6 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import com.example.socialize.BuildConfig
 import com.example.socialize.service.HostSelectionInterceptor
+import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.OkHttpClient
 
 @Module
@@ -25,9 +29,15 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(hostInterceptor: HostSelectionInterceptor): OkHttpClient {
+    fun provideOkHttpClient(hostInterceptor: HostSelectionInterceptor, @ApplicationContext context: Context): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(hostInterceptor)
+            .addInterceptor(ChuckerInterceptor.Builder(context)
+                .collector(ChuckerCollector(context))
+                .maxContentLength(250000L)
+                .alwaysReadResponseBody(true)
+                .build())
+
             .build()
     }
 

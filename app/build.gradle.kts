@@ -136,8 +136,13 @@ dependencies {
     
     // Google Sign In
     implementation("com.google.android.gms:play-services-auth:21.2.0")
-    
+    debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
+    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
+
     // Google API Client removed: using Retrofit for API calls and Play Services/Firebase for auth
+    
+    // Icons
+    implementation("androidx.compose.material:material-icons-extended")
 
 }
 kapt {

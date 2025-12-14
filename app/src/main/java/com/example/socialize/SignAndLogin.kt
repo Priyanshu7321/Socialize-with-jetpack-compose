@@ -193,10 +193,7 @@ fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel
 
             Text(
                 text = "Welcome to Socialize!",
-                style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 24.sp),
-                modifier = Modifier.clickable{
-                    showDialog=true
-                }
+                style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 24.sp)
             )
             Spacer(modifier = Modifier.height(7.dp))
             Text(
@@ -366,6 +363,7 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
     val isLoading by networkViewModel.isLoading
     val coroutineScope = rememberCoroutineScope()
     val googleAuthUiClient = remember { GoogleAuthUiClient(context) }
+    var showUrlDialog by remember { mutableStateOf(false) }
     val oneTapLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
@@ -535,14 +533,8 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
                     )
                 },
                 onLongClick = {
-                    Toast.makeText(context, "SignUp Long Click", Toast.LENGTH_SHORT).show()
-                    coroutineScope.launch {
-
-                        navController.navigate("home") {
-                            popUpTo("LoginSignUp") { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    }
+                    Toast.makeText(context, "Long press to configure IP address", Toast.LENGTH_SHORT).show()
+                    showUrlDialog = true
                 }
             ),
         shape = RoundedCornerShape(30.dp),
@@ -553,6 +545,17 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
             Text(text = "Signup", style = TextStyle(fontSize = 17.sp, color = Color.White))
         }
+    }
+
+    // URL Configuration Dialog
+    if (showUrlDialog) {
+        UrlInputDialog(
+            onDismiss = { showUrlDialog = false },
+            onConfirm = { enteredUrl ->
+                networkViewModel.updateBaseUrl(enteredUrl)
+                Toast.makeText(context, "Base URL updated to: $enteredUrl", Toast.LENGTH_LONG).show()
+            }
+        )
     }
 
     Spacer(Modifier.height(20.dp))
@@ -586,6 +589,7 @@ fun Login(navController: NavController, networkViewModel: NetworkViewModel = hil
     var password by remember { mutableStateOf("") }
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
+    var showUrlDialog by remember { mutableStateOf(false) }
     
     val authState by networkViewModel.authState.collectAsState()
     val isLoading by networkViewModel.isLoading
@@ -690,14 +694,7 @@ fun Login(navController: NavController, networkViewModel: NetworkViewModel = hil
                     }
                 },
                 onLongClick = {
-                    Toast.makeText(context, "SignUp Long Click", Toast.LENGTH_SHORT).show()
-                    coroutineScope.launch {
-
-                        navController.navigate("home") {
-                            popUpTo("LoginSignUp") { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    }
+                    navController.navigate("home")
                 }
             ),
         shape = RoundedCornerShape(30.dp),
@@ -730,6 +727,17 @@ fun Login(navController: NavController, networkViewModel: NetworkViewModel = hil
             Text("Use Test Account")
         }
     }
+    // URL Configuration Dialog
+    if (showUrlDialog) {
+        UrlInputDialog(
+            onDismiss = { showUrlDialog = false },
+            onConfirm = { enteredUrl ->
+                networkViewModel.updateBaseUrl(enteredUrl)
+                Toast.makeText(context, "Base URL updated to: $enteredUrl", Toast.LENGTH_LONG).show()
+            }
+        )
+    }
+
     // Forgot Password Text
     TextButton(
         onClick = {

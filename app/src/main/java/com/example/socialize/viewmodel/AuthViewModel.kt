@@ -84,7 +84,12 @@ class NetworkViewModel @Inject constructor(
         }
     }
     fun updateBaseUrl(url: String) {
-        interceptor.host = url.toHttpUrlOrNull() as String?
+        // Extract just the host:port from the URL
+        val cleanUrl = url.trim()
+            .removePrefix("http://")
+            .removePrefix("https://")
+            .removeSuffix("/")
+        interceptor.setBaseUrl(cleanUrl)
     }
 
 //    fun resetAuthState() {
