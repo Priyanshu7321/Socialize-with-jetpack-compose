@@ -18,6 +18,6 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-
 rootProject.name = "Socialize"
 include(":app")
+include(":backdrop")

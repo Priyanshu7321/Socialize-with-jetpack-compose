@@ -46,7 +46,7 @@ fun Users(navController: NavController) {
     }
     var text by remember { mutableStateOf("") }
     Column(
-        modifier = Modifier
+        modifier = Modifier.statusBarsPadding()
     ) {
         Row(
             Modifier

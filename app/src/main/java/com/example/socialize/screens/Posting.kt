@@ -44,6 +44,7 @@ fun post(navController: NavController){
     Column (
         modifier = Modifier
             .fillMaxSize()
+            .systemBarsPadding()
             .padding(horizontal = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ){

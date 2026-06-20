@@ -54,4 +54,9 @@ class AuthRepository @Inject constructor(private val apiService: ApiService) {
             listener.Error("invalid");
         }
     }
+
+    suspend fun ping(): String{
+        val response = apiService.ping()
+        return response;
+    }
 }

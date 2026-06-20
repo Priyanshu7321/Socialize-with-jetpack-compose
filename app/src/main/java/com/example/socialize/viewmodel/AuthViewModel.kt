@@ -1,8 +1,11 @@
 package com.example.socialize.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.socialize.service.HostSelectionInterceptor
@@ -21,7 +24,7 @@ import javax.inject.Inject
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
-    data class Success(val message: String) : AuthState()
+    data class Success(val message: String,val method: String) : AuthState()
     data class Error(val message: String) : AuthState()
 }
 
@@ -32,35 +35,39 @@ class NetworkViewModel @Inject constructor(
     private val interceptor: HostSelectionInterceptor
 ) : ViewModel() {
 
-    private val _authState = MutableStateFlow<String>("")
-    val authState: StateFlow<String> = _authState
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
+    val authState: StateFlow<AuthState> = _authState
+
+    private val _connectionCheck = MutableStateFlow<String>("")
+    val connectionCheck : StateFlow<String> = _connectionCheck
 
     private val _response = mutableStateOf<Map<String, String>>(emptyMap())
     val response: State<Map<String, String>> = _response
 
-    private var _isLoading = mutableStateOf(false)
-    val isLoading: State<Boolean> = _isLoading
+
 
     private val _isResponseSuccessfulOrNot = mutableStateOf<Boolean>(false)
     val isResponseSuccessfulOrNot: State<Boolean> = _isResponseSuccessfulOrNot
 
      fun authenticate(userPassword: UserPassword, checkMethod: String) {
         viewModelScope.launch {
-            _isLoading.value = true
-            
+            _authState.value = AuthState.Loading
             try {
                 repository.authenticate(userPassword, checkMethod, object: ApiResponseListener{
                     override fun Success(data: Map<String, String>) {
-                        _isLoading.value = false
-                        _authState.value = if (checkMethod == "login"){ "Login successful!" }else{ "Account created successfully!"}
 
+
+                        _authState.value = AuthState.Success(if (checkMethod == "login"){ "Login successful!" }else{ "Account created successfully!"},checkMethod)
                         _isResponseSuccessfulOrNot.value = true
                         _response.value = data
 
                         // Save user data to datastore
                         viewModelScope.launch(Dispatchers.IO) {
                             Log.d("tokens",_response.value.toString());
-                            if (userPassword.email!="") {
+                            if(checkMethod.contentEquals("login")){
+                                datastoreRepo.saveBool(DatastoreRepository.AUTHENTICATED,true)
+
+
                                 datastoreRepo.saveUserUsername(userPassword.email)
                                 datastoreRepo.saveAccessToken(response.value["access_token"] ?: "")
                                 datastoreRepo.saveRefreshToken(response.value["refresh_token"] ?: "")
@@ -70,16 +77,14 @@ class NetworkViewModel @Inject constructor(
                     }
 
                     override fun Error(errorMsg: String) {
-                        _isLoading.value = false
-                        _authState.value = errorMsg
-
+                        _authState.value = AuthState.Error(errorMsg)
+                        _isResponseSuccessfulOrNot.value = false
                     }
                 })
             }  catch (e: Exception) {
-                _authState.value =  "An unexpected error occurred"
+                _authState.value = AuthState.Error("An unexpected error occurred")
                 _isResponseSuccessfulOrNot.value = false
             } finally {
-                _isLoading.value = false
             }
         }
     }
@@ -105,31 +110,39 @@ class NetworkViewModel @Inject constructor(
     fun signInWithGoogle(idToken: String) {
         viewModelScope.launch {
 //            _authState.value = AuthState.Loading
-            _isLoading.value = true
+            _authState.value = AuthState.Loading
             
             try {
                 repository.signInWithGoogle(idToken,object : ApiResponseListener{
                     override fun Success(data: Map<String, String>) {
-                        _isLoading.value = false
-                        _authState.value = "successfully signed up"
+
+                        _authState.value = AuthState.Success("successfully signed up","social_login")
                         if(data!=null){
                             _response.value = data
                         }
                     }
 
                     override fun Error(errorMsg: String) {
-                        _isLoading.value = false
-                        _authState.value = errorMsg
+
+                        _authState.value = AuthState.Error(errorMsg)
                     }
 
                 })
             } catch (e: Exception) {
                 val errorMessage = e.message ?: "An unexpected error occurred during Google Sign-In"
                 Log.e("GoogleSignIn", errorMessage, e)
-                _authState.value =  "An unexpected error occurred"
+                _authState.value =  AuthState.Error("An unexpected error occurred")
             } finally {
-                _isLoading.value = false
             }
         }
+    }
+
+    fun checkConnection(){
+
+        viewModelScope.launch {
+            val response = repository.ping()
+            _connectionCheck.emit(response)
+        }
+
     }
 }

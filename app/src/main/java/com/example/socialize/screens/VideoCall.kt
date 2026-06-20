@@ -55,6 +55,7 @@ fun videoView(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding() // Add padding for status bar
                 .verticalScroll(scrollState)
                 .padding(10.dp)
                 .padding(bottom = 80.dp), // Extra padding for the button
@@ -158,9 +159,9 @@ fun videoView(navController: NavController) {
             }
         }
 
-        // Button stays fixed at bottom
+        // Button moved back to BoxScope for Alignment.BottomCenter
         Button(
-            onClick = { 
+            onClick = {
                 // Navigate to video call screen
                 // Use random IDs for testing or implement user selection logic
                 val myId = "user_" + (1000..9999).random()
@@ -170,16 +171,17 @@ fun videoView(navController: NavController) {
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             contentPadding = PaddingValues(),
             modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(50.dp)
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 20.dp)
+                .align(Alignment.BottomCenter) // Position in Box
+                .navigationBarsPadding() // Apply inset padding first (outer)
+                .padding(bottom = 35.dp)
+                .height(50.dp) // Set height (inner)
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(Color(0xFFFF6F61), Color(0xFF6200EE))
                     ),
                     shape = RoundedCornerShape(25.dp)
-                )
+                ),
+            shape = RoundedCornerShape(25.dp)
         ) {
             Text(
                 text = "Start Video Call",
@@ -188,13 +190,14 @@ fun videoView(navController: NavController) {
                 fontWeight = FontWeight.Bold
             )
         }
+
+        }
     }
-}
 
 
-@Preview(showSystemUi = true, showBackground = true)
-@Composable
-fun showVideoView(){
-    var navController= rememberNavController()
-    videoView(navController)
-}
+    @Composable()
+    fun showVideoView() {
+        var navController = rememberNavController()
+        videoView(navController)
+    }
+

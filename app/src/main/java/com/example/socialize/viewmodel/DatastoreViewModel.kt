@@ -1,5 +1,6 @@
 package com.example.socialize.viewmodel
 
+import android.R
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -13,20 +14,48 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+sealed class AuthLoginState {
+    object Loading : AuthLoginState()
+    object Authenticated : AuthLoginState()
+    object Unauthenticated : AuthLoginState()
+}
 @HiltViewModel
 class DatastoreViewModel @Inject constructor(
     private val datastoreRepository: DatastoreRepository
 ) : ViewModel() {
 
+    // Expose datastore flows directly for better performance
+    val userNameFlow = datastoreRepository.userNameFlow
+    val userEmailFlow = datastoreRepository.userEmailFlow
+    val baseUrlFlow = datastoreRepository.baseUrl
+    val authenticatedFlow: Flow<Boolean> =
+        datastoreRepository.authenticated
 
-    private fun getStringFlow(key: Preferences.Key<String>): Flow<String> {
-        return datastoreRepository.getStringFlow(key)
+    // ✅ ADD THIS HERE
+    val authStateFlow: Flow<AuthLoginState> =
+        authenticatedFlow.map { isLoggedIn ->
+            if (isLoggedIn) AuthLoginState.Authenticated
+            else AuthLoginState.Unauthenticated
+        }
+    fun <T> getFlow(key: Preferences.Key<T>): Flow<T?> {
+        return datastoreRepository.getFlow(key)
     }
 
-    private fun saveString(key: Preferences.Key<Any>, value: Any) {
+
+    public fun <T> saveData(key: Preferences.Key<T>, value: Any) {
 
         viewModelScope.launch {
-//            datastoreRepository.saveString(key ,valuea)
+            when (value) {
+                is String -> datastoreRepository.saveString(
+                    key as Preferences.Key<String>, value as String
+                )
+
+
+                is Boolean -> datastoreRepository.saveBool(
+                    key as Preferences.Key<Boolean>, value as Boolean
+                )
+
+            }
         }
     }
 }

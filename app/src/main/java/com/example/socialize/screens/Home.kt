@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -82,28 +83,87 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.navigation.NavType
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.socialize.MovableGlassView
 import com.example.socialize.screens.SwipeableCards
 import com.example.socialize.screens.VideoCallWebView
 import com.example.socialize.screens.chats
 import com.example.socialize.screens.post
+import com.example.socialize.screens.Settings
+import com.kashif_e.backdrop.backdrops.rememberLayerBackdrop
+import com.kashif_e.backdrop.drawBackdrop
+import com.kashif_e.backdrop.effects.lens
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun home() {
+fun home(navControllerHost: NavController) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val coroutineScope = rememberCoroutineScope()
     var selectedIcon by remember { mutableStateOf("Home") }
-    var navController = rememberNavController()
+    val navController = rememberNavController()
+
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
     val bottomBarRoutes = listOf("home", "members", "videoCall", "users")
+
     Scaffold(
-        bottomBar = {
+        containerColor = Color.Transparent // ✅ important
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Transparent)
+            ,
+            contentAlignment = Alignment.BottomCenter
+        ) {
+
+            // 🔹 Main App Content
+            ModalNavigationDrawer(
+                drawerState = drawerState,
+                drawerContent = {
+                    DrawerContent(navController, drawerState)
+                }
+            ) {
+                NavHost(
+                    navController = navController,
+                    startDestination = "home",
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    composable("home") { homeContent(navController) }
+                    composable("profile") { profileforus(navController) }
+                    composable("profileforother") { profileforother(navController) }
+                    composable("chats") { chats(navController) }
+                    composable("posting") { post(navController) }
+                    composable("members") { members(navController) }
+                    composable("status") { SwipeableCards(navController) }
+                    composable("videoCall") { videoView(navController) }
+                    composable(
+                        "videoCallWebView/{userId}/{otherUserId}",
+                        arguments = listOf(
+                            navArgument("userId") { type = NavType.StringType },
+                            navArgument("otherUserId") { type = NavType.StringType }
+                        )
+                    ) { backStackEntry ->
+                        VideoCallWebView(
+                            navController,
+                            backStackEntry.arguments?.getString("userId") ?: "",
+                            backStackEntry.arguments?.getString("otherUserId") ?: ""
+                        )
+                    }
+                    composable("users") { Users(navController) }
+                    composable("settings") { Settings(navController,navControllerHost) }
+                }
+            }
+
+            // 🔥 Floating Bottom Bar (Overlay)
             if (currentRoute in bottomBarRoutes) {
-                BottomNavigationBar(navController, selectedIcon) { selected ->
+                BottomNavigationBar(
+                    navController = navController,
+                    selectedIcon = selectedIcon
+                ) { selected ->
                     selectedIcon = selected
                     when (selected) {
                         "Home" -> navController.navigate("home")
@@ -114,89 +174,32 @@ fun home() {
                 }
             }
         }
-    ) {
-        Box(
-            modifier = Modifier
-                .background(color = Color.White)
-                .fillMaxSize(),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            BackHandler {
-                navController.navigate("home")
-            }
-            ModalNavigationDrawer(
-                drawerState = drawerState,
-                drawerContent = {
-                    DrawerContent(navController, drawerState)
-                }
-            ) {
-                NavHost(
-                    navController = navController,
-                    startDestination = "home",
-                    modifier = Modifier.padding(5.dp)
-                ) {
-                    composable("home") {
-                        homeContent(navController)
-                    }
-                    composable("profile") {
-                        profileforus(navController)
-                    }
-                    composable("profileforother") {
-                        profileforother(navController)
-                    }
-                    composable("chats") {
-                        chats(navController)
-                    }
-                    composable("posting") {
-                        post(navController)
-                    }
-                    composable("members") {
-                        members(navController)
-                    }
-                    composable("status") {
-                        SwipeableCards(navController)
-                    }
-                    composable("videoCall") {
-                        videoView(navController)
-                    }
-                    composable(
-                        "videoCallWebView/{userId}/{otherUserId}",
-                        arguments = listOf(
-                            androidx.navigation.navArgument("userId") { type = androidx.navigation.NavType.StringType },
-                            androidx.navigation.navArgument("otherUserId") { type = androidx.navigation.NavType.StringType }
-                        )
-                    ) { backStackEntry ->
-                        val userId = backStackEntry.arguments?.getString("userId") ?: ""
-                        val otherUserId = backStackEntry.arguments?.getString("otherUserId") ?: ""
-                        VideoCallWebView(navController, userId, otherUserId)
-                    }
-                    composable("users") {
-                        Users(navController)
-                    }
-
-                }
-            }
-
-        }
     }
-
-
 }
 
 @Composable
 fun BottomNavigationBar(navController: NavController, selectedIcon: String, onIconSelected: (String) -> Unit) {
+    val backdrop = rememberLayerBackdrop()
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp,bottom=10.dp)
+            .drawBackdrop(
+                backdrop,
+                shape = {CircleShape},
+                effects = {
+                    lens(16f.dp.toPx(), 32f.dp.toPx())
+                }
+            )
+            .padding(start = 20.dp, end = 20.dp, bottom = 10.dp)
+
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp)
-                .align(Alignment.BottomCenter),
+                .align(Alignment.Center),
             colors = CardDefaults.cardColors(
-                containerColor = Color.White
+                containerColor = Color.Transparent
             ),
             elevation = CardDefaults.elevatedCardElevation(5.dp),
             shape = RoundedCornerShape(50.dp),
@@ -237,14 +240,12 @@ fun BottomNavigationBar(navController: NavController, selectedIcon: String, onIc
         }
         Card(
             modifier = Modifier
-                .height(60.dp)
-                .width(60.dp)
+                .height(70.dp)
+                .width(70.dp)
                 .clip(shape = CircleShape)
                 .background(color = Color.White)
-                .align(Alignment.Center)
+                .align(Alignment.BottomCenter)
                 .clickable(
-                    indication = LocalIndication.current,
-                    interactionSource = remember { MutableInteractionSource() }
                 ) { navController.navigate("posting") },
             shape = CircleShape,
             elevation = CardDefaults.elevatedCardElevation(8.dp),
@@ -281,8 +282,6 @@ fun IconWithSelection(
                 color = if (isSelected) Color.Gray.copy(alpha = 0.5f) else Color.Transparent,
                 shape = CircleShape
             ).clickable(
-                indication = LocalIndication.current,
-                interactionSource = remember { MutableInteractionSource() }
             ) { onClick() }
             .shadow(if (isAddButton) 8.dp else 0.dp, CircleShape)
             .padding(8.dp),
@@ -412,7 +411,7 @@ fun postList(navController: NavController){
             Card (modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 5.dp, end = 5.dp, top = 5.dp)
-                .background(Color.White),
+                .background(Color.Transparent),
                 shape = RoundedCornerShape(30.dp),
                 elevation = CardDefaults.elevatedCardElevation(4.dp), colors = CardDefaults.cardColors(containerColor = cardColor)) {
                 Column(Modifier.padding(15.dp)) {
@@ -420,8 +419,6 @@ fun postList(navController: NavController){
                         .height(60.dp)
                         .padding(4.dp)){
                         Image(painter = rememberAsyncImagePainter( (R.drawable.boy)), contentDescription ="" , modifier = Modifier.size(50.dp).clickable(
-                            indication = LocalIndication.current,
-                            interactionSource = remember { MutableInteractionSource() },
                             enabled = true,
                             onClick = {
                             navController.navigate("profileforother") {
@@ -497,30 +494,33 @@ fun homeContent(navController: NavController) {
 
     var colorState by remember { mutableStateOf("Discover") }
 
-    Column(
-        modifier = Modifier.padding( start = 10.dp, end = 10.dp)
-    ) {
-        TopBar(navController)
-        Spacer(modifier = Modifier.height(10.dp))
+    Box() {
+        Column(
+            modifier = Modifier.padding(start = 10.dp, end = 10.dp).statusBarsPadding()
+        ) {
+            TopBar(navController)
+            Spacer(modifier = Modifier.height(10.dp))
 
-        // Discover and Following Tabs
-        TabRow(colorState) { colorState = it }
+            // Discover and Following Tabs
+            TabRow(colorState) { colorState = it }
 
-        Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.height(80.dp)) {
-            ProfileBox()
-            Spacer(Modifier.width(1.dp))
-            discoverList(stateList)
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.height(80.dp)) {
+                ProfileBox()
+                Spacer(Modifier.width(1.dp))
+                discoverList(stateList)
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            Text(
+                text = "Recent Post",
+                style = TextStyle(color = Color.Gray, fontSize = 20.sp)
+            )
+            postList(navController)
         }
-
-        Spacer(Modifier.height(10.dp))
-
-        Text(
-            text = "Recent Post",
-            style = TextStyle(color = Color.Gray, fontSize = 20.sp)
-        )
-        postList(navController)
+//        MovableGlassView()
     }
 }
 
@@ -555,8 +555,6 @@ fun TopBar(navController: NavController) {
             model = R.drawable.boy,
             contentDescription = "",
             modifier = Modifier.size(40.dp).clickable(
-                indication = LocalIndication.current,
-                interactionSource = remember { MutableInteractionSource() },
                 enabled = true,
                 onClick = {
                 navController.navigate("profile") {
@@ -566,8 +564,10 @@ fun TopBar(navController: NavController) {
             ),
         )
         Spacer(modifier = Modifier.width(5.dp))
+        Box(modifier = Modifier.clickable(onClick = {navController.navigate("settings"){launchSingleTop = true} }, enabled = true)){
+            NotificationBadge()
+        }
 
-        NotificationBadge()
     }
 }
 
@@ -607,8 +607,6 @@ fun TabButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
             fontWeight = FontWeight.Bold
         ),
         modifier = Modifier.clickable(
-            indication = LocalIndication.current,
-            interactionSource = remember { MutableInteractionSource() },
             onClick = onClick
         )
     )
@@ -691,6 +689,7 @@ fun DrawerContent(navController: NavController, drawerState: DrawerState) {
         DrawerItem("Privacy", navController, drawerState, "privacy")
         DrawerItem("Help", navController, drawerState, "help")
         DrawerItem("About", navController, drawerState, "about")
+        DrawerItem("Settings", navController, drawerState, "settings")
     }
 }
 

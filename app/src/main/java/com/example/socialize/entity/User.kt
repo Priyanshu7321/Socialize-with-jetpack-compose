@@ -16,6 +16,7 @@ data class User(
 )
 
 data class UserPassword(
+    val name: String? = null,
     val email: String,
     val password: String
 )

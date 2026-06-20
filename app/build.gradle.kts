@@ -2,8 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("kotlin-kapt")
-    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt.android)
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
 }
@@ -50,13 +50,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
-    }
 
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
         buildConfig = true
@@ -77,13 +71,24 @@ android {
             )
         }
     }
+
+}
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
 }
 
 dependencies {
     // Compose BOM must come BEFORE any Compose artifacts
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.foundation)
-    val room_version = "2.6.1"
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.ui.tooling.preview)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.ui.tooling)
+    val room_version = "2.7.0"  // More stable with KSP
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -93,7 +98,6 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.storage)
-    implementation(libs.material)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.fragment.ktx)
@@ -114,15 +118,15 @@ dependencies {
     //Room database libraries
     implementation("androidx.room:room-runtime:$room_version")
     implementation("androidx.room:room-ktx:$room_version")
-    kapt("androidx.room:room-compiler:$room_version")
+    ksp("androidx.room:room-compiler:$room_version")
+    ksp("com.google.dagger:hilt-android-compiler:2.56")
 
     //Coil library for loading images
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("io.coil-kt:coil:2.5.0")
 
     //Dagger hilt dependency
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    kapt("com.google.dagger:hilt-android-compiler:2.51.1")
+    implementation("com.google.dagger:hilt-android:2.56")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
     //Retrofit service
@@ -141,10 +145,14 @@ dependencies {
 
     // Google API Client removed: using Retrofit for API calls and Play Services/Firebase for auth
     
+    // Glass/Blur effect library - REMOVED due to Kotlin compatibility issues
+    // Use custom GlassEffect.kt instead
+//     implementation("io.github.fletchmckee.liquid:liquid:1.1.0")
+    
     // Icons
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
-
-}
-kapt {
-    correctErrorTypes = true
+    implementation(project(":backdrop"))
+//    implementation("io.github.kyant0:backdrop:2.0.0-alpha03")
 }

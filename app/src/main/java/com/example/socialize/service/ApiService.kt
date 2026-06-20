@@ -25,6 +25,9 @@ interface ApiService {
     @POST("api/auth/signup")
     suspend fun signup(@Body user: UserPassword): Response<Map<String, String>>
 
+    @GET("api/auth/ping")
+    suspend fun ping() : String;
+
     @PATCH("update_record")
     suspend fun updateUserInfo(@Body user: User): Response<Map<String,String>>
 

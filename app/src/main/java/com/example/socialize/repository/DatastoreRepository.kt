@@ -11,7 +11,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class DatastoreRepository @Inject constructor(private val dataStore: DataStore<Preferences>) {
+class DatastoreRepository @Inject constructor(public val dataStore: DataStore<Preferences>) {
     companion object {
         val USER_NAME = stringPreferencesKey("user_name")
         val USER_USERNAME = stringPreferencesKey("user_username")
@@ -22,6 +22,8 @@ class DatastoreRepository @Inject constructor(private val dataStore: DataStore<P
         val SESSION_ACCEPT_TOKEN = stringPreferencesKey("accept_token")
         val SESSION_REFRESH_TOKEN = stringPreferencesKey("refresh_token")
         val AUTHENTICATED = booleanPreferencesKey("authenticated")
+        val BASE_URL = stringPreferencesKey("base_url")
+
     }
 
 
@@ -36,6 +38,8 @@ class DatastoreRepository @Inject constructor(private val dataStore: DataStore<P
     val sessionRefreshToken: Flow<String> = getStringFlow(SESSION_REFRESH_TOKEN)
 
     val authenticated: Flow<Boolean> = getBoolFlow(AUTHENTICATED)
+    val baseUrl: Flow<String> = getStringFlow(BASE_URL)
+
 
     // --- Save functions ---
     suspend fun saveUserName(name: String) = saveString(USER_NAME, name)
@@ -46,6 +50,7 @@ class DatastoreRepository @Inject constructor(private val dataStore: DataStore<P
     suspend fun saveUserNumber(number: String) = saveString(USER_NUMBER, number)
     suspend fun saveAccessToken(token: String) = saveString(SESSION_ACCEPT_TOKEN,token)
     suspend fun saveRefreshToken(token:String) = saveString(SESSION_REFRESH_TOKEN,token)
+    suspend fun saveBaseUrl(baseUrl:String) = saveString(BASE_URL,baseUrl)
 
     suspend fun authenticate(value:Boolean)= saveBool(AUTHENTICATED,value)
     // --- Helper functions ---
@@ -54,6 +59,12 @@ class DatastoreRepository @Inject constructor(private val dataStore: DataStore<P
             preferences[key] ?: ""
         }
     }
+    fun <T> getFlow(key: Preferences.Key<T>): Flow<T?> {
+        return dataStore.data.map { prefs ->
+            prefs[key]
+        }
+    }
+
     suspend fun saveBool(key: Preferences.Key<Boolean>, value: Boolean){
         dataStore.edit {
             preferences ->

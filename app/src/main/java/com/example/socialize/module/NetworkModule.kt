@@ -32,6 +32,21 @@ object NetworkModule {
     fun provideOkHttpClient(hostInterceptor: HostSelectionInterceptor, @ApplicationContext context: Context): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(hostInterceptor)
+            .addInterceptor { chain ->
+                val request = chain.request()
+                val startTime = System.currentTimeMillis()
+                
+                android.util.Log.d("HTTP_REQUEST", "→ ${request.method} ${request.url}")
+                android.util.Log.d("HTTP_REQUEST", "Headers: ${request.headers}")
+                
+                val response = chain.proceed(request)
+                val endTime = System.currentTimeMillis()
+                
+                android.util.Log.d("HTTP_RESPONSE", "← ${response.code} ${request.url} (${endTime - startTime}ms)")
+                android.util.Log.d("HTTP_RESPONSE", "Response Headers: ${response.headers}")
+                
+                response
+            }
             .addInterceptor(ChuckerInterceptor.Builder(context)
                 .collector(ChuckerCollector(context))
                 .maxContentLength(250000L)
@@ -44,14 +59,24 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(
-        client: OkHttpClient
+        client: OkHttpClient,
+        gson: Gson
     ): Retrofit {
+
         return Retrofit.Builder()
-            .baseUrl("http://default.com/")   // dummy, required Bahi!
+            .baseUrl("http://default.com/")
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson =
+        GsonBuilder()
+            .setLenient()
+            .create()
+
 
     @Provides
     @Singleton

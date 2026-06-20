@@ -81,8 +81,7 @@ fun profileforus(navController: NavController){
     val profileThreeOptions : List<String> = listOf("Post","Bookmarks","Followers")
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 5.dp, vertical = 16.dp),
+            .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Box(
@@ -140,21 +139,21 @@ fun profileforus(navController: NavController){
                 .padding(vertical = 2.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Card (modifier = Modifier.height(70.dp).align(Alignment.Bottom), elevation = CardDefaults.elevatedCardElevation(3.dp), colors = CardDefaults.cardColors(containerColor = Color.White)){
+            Card (modifier = Modifier.height(75.dp).align(Alignment.Bottom), elevation = CardDefaults.elevatedCardElevation(3.dp), colors = CardDefaults.cardColors(containerColor = Color.White)){
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center, modifier = Modifier.height(70.dp).padding(10.dp)) {
                     Text(text = "50.5K", fontWeight = FontWeight.Bold)
                     Text(text = "Following", style = TextStyle(color=Color.Gray))
                 }
             }
-            Card (modifier = Modifier.height(70.dp), elevation = CardDefaults.elevatedCardElevation(3.dp), colors = CardDefaults.cardColors(containerColor = Color.White)){
+            Card (modifier = Modifier.height(75.dp), elevation = CardDefaults.elevatedCardElevation(3.dp), colors = CardDefaults.cardColors(containerColor = Color.White)){
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center, modifier = Modifier.height(70.dp).padding(10.dp)) {
                     Text(text = "30.5K", fontWeight = FontWeight.Bold)
                     Text(text = "Followers", style = TextStyle(color = Color.Gray))
                 }
             }
 
-            Card (modifier = Modifier.height(70.dp).align(Alignment.Bottom), elevation = CardDefaults.elevatedCardElevation(3.dp), colors = CardDefaults.cardColors(containerColor = Color.White)){
-                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center, modifier = Modifier.height(70.dp).padding(18.dp)) {
+            Card (modifier = Modifier.height(75.dp).align(Alignment.Bottom), elevation = CardDefaults.elevatedCardElevation(3.dp), colors = CardDefaults.cardColors(containerColor = Color.White)){
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center, modifier = Modifier.height(70.dp).padding(10.dp)) {
                     Text(text = "255", fontWeight = FontWeight.Bold)
                     Text(text = "Posts", style = TextStyle(color = Color.Gray))
                 }
@@ -164,8 +163,8 @@ fun profileforus(navController: NavController){
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(70.dp)
-                .padding(vertical = 8.dp)
+                .height(80.dp)
+                .padding(vertical = 8.dp, horizontal = 5.dp)
                 .clip(shape = RoundedCornerShape(20.dp))
                 .background(color = Color.Gray.copy(alpha = 0.2f))
                 .padding(5.dp)
@@ -191,7 +190,7 @@ fun profileforus(navController: NavController){
                         contentDescription = "",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f)
+                            .weight(0.8f)
                     )
 
                     if (select == 0) {
@@ -220,12 +219,12 @@ fun profileforus(navController: NavController){
                         contentDescription = "",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f)
+                            .weight(0.8f)
                     )
 
                     if (select == 1) {
                         Spacer(Modifier.height(4.dp))
-                        Text("Post", modifier = Modifier.weight(1f))
+                        Text("Bookmarks", modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -234,8 +233,8 @@ fun profileforus(navController: NavController){
                     .weight(1f)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(20.dp))
-                    .background(color = if (select == 1) Color.White else Color.Transparent)
-                    .clickable { select = 1 }
+                    .background(color = if (select == 2) Color.White else Color.Transparent)
+                    .clickable { select = 2 }
                     .padding(horizontal = 10.dp, vertical = 5.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -248,28 +247,12 @@ fun profileforus(navController: NavController){
                         contentDescription = "",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f)
+                            .weight(0.8f)
                     )
 
                     if (select == 2) {
                         Spacer(Modifier.height(4.dp))
-                        BoxWithConstraints(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                                .padding(horizontal = 8.dp)
-                        ) {
-                            val textSize = if (maxWidth < 200.dp) 12.sp else if (maxWidth < 300.dp) 14.sp else 16.sp
-
-                            Text(
-                                text = profileThreeOptions[2],
-                                fontSize = textSize,
-                                textAlign = TextAlign.Center,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                        Text("Followers", modifier = Modifier.weight(1f))
                     }
                 }
 

@@ -115,6 +115,7 @@ fun VideoCallWebView(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 30.dp)
+                .navigationBarsPadding() // Add padding for navigation bar
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {

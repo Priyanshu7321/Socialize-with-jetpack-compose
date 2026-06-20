@@ -9,8 +9,8 @@
 
     <!-- ✅ App theme with transparent system bars for edge-to-edge -->
     <style name="Theme.Socialize" parent="Base.Theme.Socialize">
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:statusBarColor">#F42121</item>
+        <item name="android:navigationBarColor">#F42121</item>
 
         <!-- Set this to false if your background is dark (white icons), true if light (dark icons) -->
         <item name="android:windowLightStatusBar">false</item>

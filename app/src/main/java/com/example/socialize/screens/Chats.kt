@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,26 +48,26 @@ import androidx.navigation.compose.rememberNavController
 import com.example.socialize.R
 import com.example.socialize.viewmodel.DatabaseViewModel
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 
 @Composable
 fun chats(navController: NavController,databaseViewModel: DatabaseViewModel=hiltViewModel()) {
     Box(
         modifier = Modifier
-            .background(color = Color.Gray)
             .fillMaxSize()
-            .systemBarsPadding()
-            .padding(4.dp)
+            .statusBarsPadding()
+            .padding(top = 4.dp)
     )  {
 
         Column(
             modifier = Modifier
                 .background(color = Color.White)
                 .fillMaxSize()
-                .padding(bottom = 10.dp, start = 8.dp, end = 8.dp)
+                .padding(bottom = 2.dp, start = 2.dp, end = 8.dp)
         ) {
             Card(
                 modifier = Modifier
-                    .height(70.dp)
+                    .height(50.dp)
                     .fillMaxWidth()
                     .background(
                         brush = Brush.verticalGradient(
@@ -83,16 +84,10 @@ fun chats(navController: NavController,databaseViewModel: DatabaseViewModel=hilt
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(end = 10.dp, start = 4.dp),
+                        .padding(end = 10.dp, start = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Filled.KeyboardArrowLeft,
-                            contentDescription = "",
-                            modifier = Modifier.size(40.dp)
-                        )
-                    }
+                    Image(painter = painterResource(R.drawable.left), contentDescription = "", modifier = Modifier.size(27.dp))
                     Image(
                         painter = painterResource(R.drawable.boy),
                         contentDescription = "",
@@ -116,9 +111,9 @@ fun chats(navController: NavController,databaseViewModel: DatabaseViewModel=hilt
                         )
                     }
                     Spacer(Modifier.weight(1f))
-                    Image(painter = painterResource(R.drawable.video), contentDescription = "", modifier = Modifier.size(30.dp))
+                    Image(painter = painterResource(R.drawable.video), contentDescription = "", modifier = Modifier.size(27.dp))
                     Spacer(Modifier.width(10.dp))
-                    Image(painter = painterResource(R.drawable.telephone), contentDescription = "", modifier = Modifier.size(25.dp))
+                    Image(painter = painterResource(R.drawable.telephone), contentDescription = "", modifier = Modifier.size(23.dp))
 
                 }
 
@@ -126,9 +121,9 @@ fun chats(navController: NavController,databaseViewModel: DatabaseViewModel=hilt
             Column (modifier = Modifier.weight(1f).padding(vertical = 8.dp)){
                 mainChatSection()
             }
-            Box(modifier = Modifier.padding(top = 8.dp)){
+//            Box(modifier = Modifier){
                 messageSendSection()
-            }
+//            }//
         }
 
     }
@@ -146,7 +141,7 @@ fun mainChatSection(){
             if(it%2==0){
                 Row (
                     modifier = Modifier
-                        .padding(start = 50.dp, top = 8.dp, bottom = 8.dp)
+                        .padding(start = 50.dp, top = 3.dp, bottom = 3.dp)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.Top
@@ -219,18 +214,17 @@ fun messageSendSection(){
     var textval by remember { mutableStateOf("") }
     Card (modifier = Modifier
         .fillMaxWidth()
-        .heightIn(min = 65.dp,max=100.dp)
+        .height(60.dp)
         .padding(start = 10.dp, end = 10.dp),
         shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp, bottomStart = 40.dp, bottomEnd = 40.dp),
         elevation = CardDefaults.elevatedCardElevation(4.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ){
         Row (modifier = Modifier.fillMaxSize().padding(start = 10.dp, end = 10.dp), verticalAlignment = Alignment.CenterVertically){
-            Image(painter = painterResource(R.drawable.audio), contentDescription = "", modifier = Modifier.size(25.dp).background(color=Color.White))
+            Image(painter = painterResource(R.drawable.audio), contentDescription = "", modifier = Modifier.size(22.dp).background(color=Color.White))
             TextField(
                 value =textval ,
                 onValueChange = {it -> textval= it},
-                textStyle = TextStyle(fontSize = 15.sp),
                 modifier = Modifier.weight(1f).background(color = Color.Transparent),
                 placeholder = { Text(text = "Send text message") },
                 colors = TextFieldDefaults.colors(
@@ -240,9 +234,9 @@ fun messageSendSection(){
                     unfocusedIndicatorColor = Color.White, // Removes underline
                     focusedIndicatorColor = Color.White // Removes underline
                 ) )
-            Image(painter = painterResource(R.drawable.camera), contentDescription = "", modifier = Modifier.size(30.dp).background(color=Color.White))
+            Image(painter = painterResource(R.drawable.camera), contentDescription = "", modifier = Modifier.size(25.dp).background(color=Color.White))
             Spacer(Modifier.width(8.dp))
-            Image(painter = painterResource(R.drawable.sendmessage), contentDescription = "", modifier = Modifier.size(25.dp).background(color=Color.White))
+            Image(painter = painterResource(R.drawable.sendmessage), contentDescription = "", modifier = Modifier.size(22.dp).background(color=Color.White))
 
         }
     }

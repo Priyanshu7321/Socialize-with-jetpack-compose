@@ -56,8 +56,6 @@ fun SwipeableCards(navController: NavController) {
         }
     }
     Box(modifier = Modifier.height(screenHeight.dp).width(screenWidth.dp).clickable(
-        indication = LocalIndication.current,
-        interactionSource = remember { MutableInteractionSource() },
         onClick = { count.value++ }
     ).background(color=Color.White.copy(alpha=0.2f)).systemBarsPadding()){
         Row(Modifier.fillMaxWidth()) {
@@ -134,8 +132,8 @@ fun SwipeableCards(navController: NavController) {
                     onValueChange = { statusReply.value = it },
                     label = { Text("Enter text") },
                     modifier = Modifier.padding(all=5.dp).weight(5f),
-                    colors = TextFieldDefaults.textFieldColors(
-                        containerColor = Color.Transparent, // <-- Also this is needed
+                    colors = TextFieldDefaults.colors(
+                        focusedTextColor = Color.Transparent, // <-- Also this is needed
                         unfocusedIndicatorColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         disabledIndicatorColor = Color.Transparent

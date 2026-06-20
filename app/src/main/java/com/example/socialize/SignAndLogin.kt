@@ -2,6 +2,7 @@ package com.example.socialize
 
 import android.app.Activity
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -19,7 +20,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -45,25 +45,65 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.core.view.WindowInsetsControllerCompat
+
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.socialize.auth.GoogleAuthUiClient
 import com.example.socialize.composables.home
 import com.example.socialize.entity.UserPassword
+import com.example.socialize.repository.DatastoreRepository
 import com.example.socialize.ui.components.ErrorDialog
 import com.example.socialize.ui.theme.SocializeTheme
 import com.example.socialize.viewmodel.AuthState
+import com.example.socialize.viewmodel.DatastoreViewModel
 import com.google.firebase.BuildConfig
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineScope
+import javax.inject.Inject
+import kotlin.math.roundToInt
+
+import androidx.compose.ui.graphics.RenderEffect
+
+import android.graphics.Shader
+import androidx.compose.foundation.LocalIndication
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import com.example.socialize.viewmodel.AuthLoginState
+
+import kotlin.math.roundToInt
 
 @AndroidEntryPoint
 class SignAndLogin : ComponentActivity() {
@@ -74,78 +114,204 @@ class SignAndLogin : ComponentActivity() {
 
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.auto(
-                lightScrim = android.graphics.Color.parseColor("#2196F3"), // Light mode status bar
-                darkScrim = android.graphics.Color.parseColor("#0D47A1")   // Dark mode status bar (darker blue)
+                lightScrim = android.graphics.Color.BLUE,
+                darkScrim = android.graphics.Color.TRANSPARENT
             ),
             navigationBarStyle = SystemBarStyle.auto(
-                lightScrim = android.graphics.Color.WHITE,                 // Light mode nav bar
-                darkScrim = android.graphics.Color.BLACK                   // Dark mode nav bar
+                lightScrim = android.graphics.Color.BLACK,
+                darkScrim = android.graphics.Color.TRANSPARENT
             )
         )
 
         setContent {
             SocializeTheme {
-                val navController = rememberNavController()
+                val navControllerHost = rememberNavController()
                 Scaffold(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .systemBarsPadding()
+                    modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
-                    NavHost(
-                        navController = navController,
-                        startDestination = "LoginSignUp",
-                        modifier = Modifier
-                            .padding()
-                            .fillMaxSize()
-                    ) {
-                        composable("LoginSignUp") {
-                            LoginSignUp(navController)
+                    val datastoreViewModel: DatastoreViewModel = hiltViewModel()
+
+                    val authState by datastoreViewModel.authStateFlow
+                        .collectAsState(initial = AuthLoginState.Loading)
+
+                    when (authState) {
+                        AuthLoginState.Loading -> {
+                            // Splash / empty screen
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
                         }
-                        composable("home") {
-                            home()
+
+                        AuthLoginState.Authenticated -> {
+                            AppNavHost(
+                                navController = navControllerHost,
+                                startDestination = "home",
+                                innerPadding = innerPadding
+                            )
+                        }
+
+                        AuthLoginState.Unauthenticated -> {
+                            AppNavHost(
+                                navController = navControllerHost,
+                                startDestination = "LoginSignUp",
+                                innerPadding = innerPadding
+                            )
                         }
                     }
+
                 }
             }
         }
     }
 }
+@Composable
+fun AppNavHost(
+    navController: NavHostController,
+    startDestination: String,
+    innerPadding: PaddingValues
+) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = innerPadding.calculateBottomPadding())
+    ) {
+        composable("LoginSignUp") {
+            LoginSignUp(navController)
+        }
+        composable("home") {
+            home(navController)
+        }
+    }
+}
+
+
+enum class GlassType {
+    CONVEX,
+    CONCAVE
+}
+
+@Composable
+fun MovableGlassView(
+    modifier: Modifier = Modifier,
+    size: Dp = 150.dp,
+    cornerRadius: Dp = 24.dp,
+    glassType: GlassType = GlassType.CONVEX
+) {
+    var offsetX by remember { mutableStateOf(0f) }
+    var offsetY by remember { mutableStateOf(0f) }
+
+    val highlightAlpha = if (glassType == GlassType.CONVEX) 0.45f else 0.15f
+    val shadowAlpha = if (glassType == GlassType.CONVEX) 0.25f else 0.45f
+
+    Box(
+        modifier = modifier
+            .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
+            .size(size)
+            .clip(RoundedCornerShape(cornerRadius))
+            // 🌈 Glass refraction gradient
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = highlightAlpha),
+                        Color.White.copy(alpha = 0.05f),
+                        Color.Black.copy(alpha = shadowAlpha)
+                    ),
+                    start = Offset.Zero,
+                    end = Offset.Infinite
+                )
+            )
+            // 🌫 Soft glass blur
+            .blur(14.dp)
+            // ✨ Edge refraction highlight
+            .border(
+                1.5.dp,
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.6f),
+                        Color.White.copy(alpha = 0.2f),
+                        Color.Transparent
+                    )
+                ),
+                RoundedCornerShape(cornerRadius)
+            )
+            // 🕳 Inner shadow illusion
+            .drawWithContent {
+                drawContent()
+                drawRoundRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.35f)
+                        )
+                    ),
+                    cornerRadius = CornerRadius(cornerRadius.toPx()),
+                    size = this.size
+                )
+            }
+            .pointerInput(Unit) {
+                detectDragGestures { change, drag ->
+                    change.consume()
+                    offsetX += drag.x
+                    offsetY += drag.y
+                }
+            }
+    )
+}
+
+
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel = hiltViewModel()) {
+fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel = hiltViewModel(),datastoreViewModel: DatastoreViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val isLoading by networkViewModel.isLoading
+    val isLoading = remember{ mutableStateOf(false)}
     var showDialog by remember { mutableStateOf(false) }
     // Observe auth state
     val authState by networkViewModel.authState.collectAsState()
-    
+    LaunchedEffect(coroutineScope) {
+        Log.d("checkAuth", ""
+        )
+    }
     // Show success/error dialogs and handle navigation
     LaunchedEffect(authState) {
         when (val state = authState) {
             is AuthState.Success -> {
+                isLoading.value = false
                 // Show success message
                 Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
                 
                 // Navigate to home on success with a small delay to show the success message
-                Handler(Looper.getMainLooper()).postDelayed({
-                    navController.navigate("home") {
-                        popUpTo(0) { inclusive = true } // Clear back stack
-                    }
-                }, 500)
+                if(state.method.equals("login")) {
+                    datastoreViewModel.saveData(DatastoreRepository.AUTHENTICATED,true)
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        navController.navigate("home") {
+                            popUpTo(0) { inclusive = true } // Clear back stack
+                        }
+                    }, 500)
+                }
             }
             is AuthState.Error -> {
+                isLoading.value = false
                 // Show error dialog
                 if (state.message.isNotBlank()) {
-                    Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, state.message+"hello", Toast.LENGTH_LONG).show()
                 }
             }
             is AuthState.Loading -> {
+                isLoading.value = true
                 // Show loading state if needed
             }
-            else -> {}
+            else -> {
+                isLoading.value = false
+            }
         }
     }
     val googleAuthUiClient = remember { GoogleAuthUiClient(context) }
@@ -174,6 +340,7 @@ fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel
                 .padding(start = 20.dp, end = 20.dp, top = 5.dp)
                 .fillMaxSize()
                 .background(color = Color.White)
+                .systemBarsPadding() // Add padding for system bars
                 .verticalScroll(scrollState) // Apply vertical scrolling
         ) {
             Box(modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)) {
@@ -224,35 +391,21 @@ fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel
             Row(modifier = Modifier
                 .height(60.dp)
                 .fillMaxWidth()) {
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.5f))
-                            .wrapContentSize(Alignment.Center)
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(50.dp),
-                            color = Color.White
-                        )
-                    }
-                }
                 Card(
                     modifier = Modifier
                         .weight(1f)
                         .height(50.dp)
                         .padding(3.dp)
                         .clickable(
-                            indication = rememberRipple(),
-                            interactionSource = remember { MutableInteractionSource() }
                         ) {
                             handleGoogleSignIn(
-                                isLoading = isLoading,
+                                isLoading = isLoading.value,
                                 context = context,
                                 coroutineScope = coroutineScope,
                                 googleAuthUiClient = googleAuthUiClient,
                                 oneTapLauncher = oneTapLauncher
                             )
+                            networkViewModel.checkConnection();
                         },
                     shape = RoundedCornerShape(30.dp),
                     border = BorderStroke(width = 1.dp, color = Color.Gray),
@@ -312,8 +465,8 @@ fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel
                 )
             }
         }
-        if (isLoading){
-            Box(modifier = Modifier.fillMaxWidth()) {
+        if (isLoading.value){
+            Box(modifier = Modifier.fillMaxSize()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.Magenta)
             }
         }
@@ -358,12 +511,26 @@ fun UrlInputDialog(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hiltViewModel()) {
+fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hiltViewModel(),datastoreViewModel: DatastoreViewModel = hiltViewModel()) {
+    val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val isLoading by networkViewModel.isLoading
+    val isLoading = remember{ mutableStateOf(false)}
     val coroutineScope = rememberCoroutineScope()
     val googleAuthUiClient = remember { GoogleAuthUiClient(context) }
     var showUrlDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(coroutineScope) {
+        datastoreViewModel
+            .getFlow(DatastoreRepository.BASE_URL)
+            .collect { value ->
+                val baseUrl = value as? String
+
+                if (!baseUrl.isNullOrBlank()) {
+                    networkViewModel.updateBaseUrl(baseUrl)
+                }
+            }
+    }
+
     val oneTapLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
@@ -383,15 +550,7 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
     var name by remember { mutableStateOf("") }
     var email by remember{ mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    val isResponseSuccessfulorNot = networkViewModel.isResponseSuccessfulOrNot
-    LaunchedEffect(isResponseSuccessfulorNot.value) {
-        if(isResponseSuccessfulorNot.value){
-            navController.navigate("home") {
-                popUpTo("LoginSignUp") { inclusive = true }
-                launchSingleTop = true
-            }
-        }
-    }
+
     val gradient = Brush.horizontalGradient(
         colors = listOf(Color(0xFFE2F3EA), Color(0xFFCDA2E0)) // Custom gradient colors
     )
@@ -521,16 +680,17 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
             .fillMaxWidth()
             .height(50.dp)
             .combinedClickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() },
                 onClick = {
-                    handleGoogleSignIn(
-                        isLoading = isLoading,
-                        context = context,
-                        coroutineScope = coroutineScope,
-                        googleAuthUiClient = googleAuthUiClient,
-                        oneTapLauncher = oneTapLauncher
-                    )
+                    scope.launch {
+                        networkViewModel.authenticate(UserPassword(name = name, email = email, password = password),"signup")
+                    }
+//                    handleGoogleSignIn(
+//                        isLoading = isLoading,
+//                        context = context,
+//                        coroutineScope = coroutineScope,
+//                        googleAuthUiClient = googleAuthUiClient,
+//                        oneTapLauncher = oneTapLauncher
+//                    )
                 },
                 onLongClick = {
                     Toast.makeText(context, "Long press to configure IP address", Toast.LENGTH_SHORT).show()
@@ -554,6 +714,7 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
             onConfirm = { enteredUrl ->
                 networkViewModel.updateBaseUrl(enteredUrl)
                 Toast.makeText(context, "Base URL updated to: $enteredUrl", Toast.LENGTH_LONG).show()
+                datastoreViewModel.saveData(DatastoreRepository.BASE_URL,enteredUrl)
             }
         )
     }
@@ -575,7 +736,7 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
             .background(color = Color.Gray)){}
     }
 
-    if (isLoading) {
+    if (isLoading.value) {
         Box(modifier = Modifier.fillMaxWidth()) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Color.Magenta)
         }
@@ -590,28 +751,11 @@ fun Login(navController: NavController, networkViewModel: NetworkViewModel = hil
     var showErrorDialog by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
     var showUrlDialog by remember { mutableStateOf(false) }
-    
-    val authState by networkViewModel.authState.collectAsState()
-    val isLoading by networkViewModel.isLoading
+
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     
-    // Handle auth state changes
-    LaunchedEffect(authState) {
-        when (val state = authState) {
-            is AuthState.Success -> {
-                navController.navigate("home") {
-                    popUpTo("LoginSignUp") { inclusive = true }
-                    launchSingleTop = true
-                }
-            }
-            is AuthState.Error -> {
-                errorMessage = state.message
-                showErrorDialog = true
-            }
-            else -> {}
-        }
-    }
+
     
     // Show error dialog if needed
     if (showErrorDialog) {
@@ -682,8 +826,6 @@ fun Login(navController: NavController, networkViewModel: NetworkViewModel = hil
             .fillMaxWidth()
             .height(50.dp)
             .combinedClickable(
-                indication = rememberRipple(),
-                interactionSource = remember { MutableInteractionSource() },
                 onClick = {
                     val userPassword = UserPassword(
                         email = email,
@@ -692,9 +834,6 @@ fun Login(navController: NavController, networkViewModel: NetworkViewModel = hil
                     coroutineScope.launch {
                         networkViewModel.authenticate(userPassword, "login")
                     }
-                },
-                onLongClick = {
-                    navController.navigate("home")
                 }
             ),
         shape = RoundedCornerShape(30.dp),
