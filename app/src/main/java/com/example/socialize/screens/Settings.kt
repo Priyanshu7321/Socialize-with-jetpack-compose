@@ -27,16 +27,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
+import com.example.socialize.ui.theme.Dimens
+
 @Composable
 fun Settings(navController: NavController,navControllerHost: NavController) {
-    var isDarkTheme by remember { mutableStateOf(false) } // Mock state for now
+    var isDarkTheme by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
             .statusBarsPadding()
-            .padding(16.dp)
+            .padding(horizontal = Dimens.horizontalPadding, vertical = 16.dp)
     ) {
         // Header
         Row(

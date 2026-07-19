@@ -8,6 +8,8 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,8 +30,12 @@ import androidx.navigation.compose.rememberNavController
 import com.example.socialize.R
 import kotlin.random.Random
 import androidx.compose.foundation.layout.systemBarsPadding
+import com.example.socialize.ui.theme.Dimens
+data class UserProfile(val name: String, val avatar: Int, val followers: Int){
 
-data class UserProfile(val name: String, val avatar: Int, val followers: Int)
+}
+
+
 
 @Composable
 fun Users(navController: NavController) {
@@ -51,51 +57,68 @@ fun Users(navController: NavController) {
         Row(
             Modifier
                 .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp),
+                .padding(horizontal = Dimens.horizontalPadding)
+                .padding(top = 10.dp, bottom = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
+            Icon(
                 painter = painterResource(R.drawable.back),
                 contentDescription = "Back",
-                Modifier
-                    .size(25.dp)
-                    .clickable { navController.popBackStack() }
-            )
-            Card(
                 modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 48.dp),
-                elevation = CardDefaults.elevatedCardElevation(3.dp),
-                shape = RoundedCornerShape(24.dp)
+                    .size(25.dp)
+                    .clickable { navController.popBackStack() },
+                tint = Color.Black
+            )
+            // Search bar — same style as Members screen
+            Card(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(30.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F3F3)),
+                elevation = CardDefaults.elevatedCardElevation(0.dp)
             ) {
-                TextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    singleLine = true,
-                    textStyle = TextStyle(fontSize = 14.sp),
+                Row(
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Color.White,
-                        focusedContainerColor = Color.White,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent
-                    ),
-                    placeholder = {
-                        Text(
-                            "Search users, groups, influencers",
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            fontSize = 12.sp
-                        )
-                    }
-                )
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Search,
+                        contentDescription = "Search",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    TextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        singleLine = true,
+                        textStyle = TextStyle(fontSize = 16.sp),
+                        modifier = Modifier.weight(1f),
+                        colors = TextFieldDefaults.colors(
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                        ),
+                        placeholder = {
+                            Text(
+                                "Search users, groups, influencers",
+                                style = TextStyle(color = Color.Gray, fontSize = 15.sp),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    )
+                }
             }
-            Image(
+            Icon(
                 painter = painterResource(R.drawable.menulist),
-                contentDescription = "",
-                Modifier.size(25.dp)
+                contentDescription = "Filter",
+                tint = Color.Black,
+                modifier = Modifier.size(25.dp)
             )
         }
         Spacer(Modifier.height(8.dp))

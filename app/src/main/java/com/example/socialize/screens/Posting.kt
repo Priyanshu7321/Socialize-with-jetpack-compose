@@ -38,6 +38,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.socialize.R
 
+import com.example.socialize.ui.theme.Dimens
+
 @Composable
 fun post(navController: NavController){
     var text by remember{ mutableStateOf("") }
@@ -45,7 +47,7 @@ fun post(navController: NavController){
         modifier = Modifier
             .fillMaxSize()
             .systemBarsPadding()
-            .padding(horizontal = 10.dp),
+            .padding(horizontal = Dimens.horizontalPadding),
         horizontalAlignment = Alignment.CenterHorizontally
     ){
         Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)){

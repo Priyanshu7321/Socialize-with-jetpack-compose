@@ -1,161 +1,192 @@
 package com.example.socialize.screens
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.LocalIndication
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import com.example.socialize.R
 import kotlinx.coroutines.delay
-import androidx.compose.foundation.layout.systemBarsPadding
 
-@OptIn(ExperimentalMaterial3Api::class)
+private val storyPages = listOf(
+    R.drawable.forest1,
+    R.drawable.forest2,
+    R.drawable.forest3
+)
+private const val PAGE_DURATION_MS = 2500L
+
 @Composable
 fun SwipeableCards(navController: NavController) {
-    val lazyListState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
-    val screenHeight = LocalConfiguration.current.screenHeightDp
-    val screenWidth = LocalConfiguration.current.screenWidthDp
-    var imageList= listOf(R.drawable.boy,R.drawable.boy1,R.drawable.boy2)
-    var count= remember { mutableIntStateOf(0) }
-    var progressList= remember { mutableStateListOf(0f,0f,0f) }
-    var statusReply = remember{
-        mutableStateOf("Write your review")
-    }
-    LaunchedEffect(Unit) {
-        for(i in progressList.indices){
-            while (progressList[i]<1f){
-                delay(300)
-                progressList[i]+=0.1f
-            }
-            count.value++
+    var currentPage by remember { mutableIntStateOf(0) }
+    // Progress for current page 0f..1f driven by timer
+    var progress by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(currentPage) {
+        progress = 0f
+        val steps = 50
+        val stepDelay = PAGE_DURATION_MS / steps
+        repeat(steps) {
+            delay(stepDelay)
+            progress = (it + 1) / steps.toFloat()
+        }
+        // Advance to next page or exit
+        if (currentPage < storyPages.size - 1) {
+            currentPage++
+        } else {
+            navController.popBackStack()
         }
     }
-    Box(modifier = Modifier.height(screenHeight.dp).width(screenWidth.dp).clickable(
-        onClick = { count.value++ }
-    ).background(color=Color.White.copy(alpha=0.2f)).systemBarsPadding()){
-        Row(Modifier.fillMaxWidth()) {
-            progressList.indices.forEach {index->
-                LinearProgressIndicator(
-                    progress = { progressList[index] },
-                    modifier = Modifier.weight(1f).padding(5.dp),
-                )
-            }
-        }
-        Image(
-            painter = rememberAsyncImagePainter( imageList[(count.value)%3]),
-            contentDescription = "",
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        // Background image
+        AsyncImage(
+            model = storyPages[currentPage],
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-        Box(Modifier.padding(top = 20.dp)) {
-            Box(modifier = Modifier.fillMaxWidth().height(50.dp).padding(end = 10.dp)) {
-                Row(
-                    modifier = Modifier.height(50.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    Image(
-                        painter = rememberAsyncImagePainter(R.drawable.back),
-                        contentDescription = "",
-                        modifier = Modifier.padding(10.dp, 10.dp)
-                    )
-                    Spacer(Modifier.width(5.dp))
-                    Image(
-                        painter = rememberAsyncImagePainter(R.drawable.boy),
-                        contentDescription = ""
-                    )
-                    Spacer(Modifier.width(5.dp))
-                    Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
-                        Text(
-                            text = "Akshay",
-                            style = TextStyle(fontSize = 18.sp)
-                        )
-                        Text(
-                            text = "posted 8h ago",
-                        )
-                    }
 
+        // Dark overlay for readability
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.25f))
+        )
+
+        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
+            // Progress bars
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                storyPages.forEachIndexed { index, _ ->
+                    val barProgress = when {
+                        index < currentPage -> 1f
+                        index == currentPage -> progress
+                        else -> 0f
+                    }
+                    LinearProgressIndicator(
+                        progress = { barProgress },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(2.dp)),
+                        color = Color.White,
+                        trackColor = Color.White.copy(alpha = 0.4f)
+                    )
                 }
+            }
+
+            // Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ArrowBackIosNew,
+                    contentDescription = "Back",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable { navController.popBackStack() }
+                )
+                Spacer(Modifier.width(10.dp))
                 Image(
-                    painter = rememberAsyncImagePainter(R.drawable.menulist),
-                    contentDescription = "",
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(13.dp, 13.dp),
-                    colorFilter = ColorFilter.tint(color = Color.Black)
+                    painter = painterResource(R.drawable.boy),
+                    contentDescription = "Avatar",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                )
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = "Akshay",
+                        style = TextStyle(color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    )
+                    Text(
+                        text = "8h ago",
+                        style = TextStyle(color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
+                    )
+                }
+                Spacer(Modifier.weight(1f))
+                Icon(
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = "More",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
-        Row(
-            modifier = Modifier
-                .height(100.dp)
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 15.dp)
-                .background(Color.Transparent) // <-- Make Row background transparent
-        ) {
-            Card(
-                modifier = Modifier
-                    .height(60.dp)
-                    .fillMaxWidth()
-                    .weight(6f).align(Alignment.CenterVertically),
-                shape = RoundedCornerShape(30.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp), // <-- No shadow/elevation
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.Transparent,
-                    contentColor = Color.Black // or whatever content color
-                )
-            ) {
-                TextField(
-                    value = statusReply.value,
-                    onValueChange = { statusReply.value = it },
-                    label = { Text("Enter text") },
-                    modifier = Modifier.padding(all=5.dp).weight(5f),
-                    colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.Transparent, // <-- Also this is needed
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent
-                    )
-                )
-            }
 
-            Spacer(Modifier.width(5.dp))
-
-            Card(
+        // Tap zones — left half goes back, right half goes forward
+        Row(modifier = Modifier.fillMaxSize()) {
+            Box(
                 modifier = Modifier
                     .weight(1f)
-                    .aspectRatio(1f)
-                    .align(Alignment.CenterVertically),
-                shape = CircleShape,
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp), // Optional if you want it flat
-                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-            ) {
-                // You can place an icon or button here
-            }
+                    .fillMaxHeight()
+                    .clickable {
+                        if (currentPage > 0) currentPage--
+                    }
+            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clickable {
+                        if (currentPage < storyPages.size - 1) currentPage++
+                        else navController.popBackStack()
+                    }
+            )
         }
-
-
     }
 }

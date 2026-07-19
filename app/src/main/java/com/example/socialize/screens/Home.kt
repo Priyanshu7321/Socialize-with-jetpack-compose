@@ -2,16 +2,22 @@ package com.example.socialize.composables
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +35,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
@@ -40,6 +47,7 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
@@ -49,54 +57,64 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.socialize.R
+import com.example.socialize.screens.Settings
+import com.example.socialize.screens.SwipeableCards
 import com.example.socialize.screens.Users
+import com.example.socialize.screens.VideoCallWebView
+import com.example.socialize.screens.chats
 import com.example.socialize.screens.members
+import com.example.socialize.screens.post
 import com.example.socialize.screens.profileforother
 import com.example.socialize.screens.profileforus
 import com.example.socialize.screens.videoView
-import kotlinx.coroutines.launch
-import kotlin.random.Random
-
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.navigation.NavController
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.navigation.NavType
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.navArgument
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.example.socialize.MovableGlassView
-import com.example.socialize.screens.SwipeableCards
-import com.example.socialize.screens.VideoCallWebView
-import com.example.socialize.screens.chats
-import com.example.socialize.screens.post
-import com.example.socialize.screens.Settings
+import com.example.socialize.ui.theme.Dimens
 import com.kashif_e.backdrop.backdrops.rememberLayerBackdrop
 import com.kashif_e.backdrop.drawBackdrop
+import com.kashif_e.backdrop.effects.blur
+import com.kashif_e.backdrop.effects.colorControls
 import com.kashif_e.backdrop.effects.lens
+import com.kashif_e.backdrop.highlight.Highlight
+import com.kashif_e.backdrop.highlight.HighlightStyle
+import com.kashif_e.backdrop.shadow.InnerShadow
+import com.kashif_e.backdrop.shadow.Shadow
+import kotlinx.coroutines.launch
+import kotlin.math.PI
+import kotlin.math.sin
+import kotlin.random.Random
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -177,89 +195,190 @@ fun home(navControllerHost: NavController) {
     }
 }
 
+/**
+ * Draws a convex bump using Canvas — separate from the backdrop shape
+ * so lens() can use RoundedCornerShape (CornerBasedShape requirement).
+ */
+fun drawConvexBump(
+    drawScope: androidx.compose.ui.graphics.drawscope.DrawScope,
+    bumpFraction: Float,
+    bumpWidthPx: Float,
+    bumpHeightPx: Float,
+    color: Color
+) {
+    val w = drawScope.size.width
+    val cx = bumpFraction * w
+    val bw = bumpWidthPx / 2f
+    val bumpStart = (cx - bw).coerceIn(0f, w)
+    val bumpEnd = (cx + bw).coerceIn(0f, w)
+    val path = Path().apply {
+        moveTo(bumpStart, 0f)
+        cubicTo(bumpStart + bw * 0.3f, 0f, cx - bw * 0.1f, -bumpHeightPx, cx, -bumpHeightPx)
+        cubicTo(cx + bw * 0.1f, -bumpHeightPx, bumpEnd - bw * 0.3f, 0f, bumpEnd, 0f)
+        close()
+    }
+    drawScope.drawPath(path, color)
+    // Subtle highlight stroke on bump edge
+    val strokePath = Path().apply {
+        moveTo(bumpStart, 0f)
+        cubicTo(bumpStart + bw * 0.3f, 0f, cx - bw * 0.1f, -bumpHeightPx, cx, -bumpHeightPx)
+        cubicTo(cx + bw * 0.1f, -bumpHeightPx, bumpEnd - bw * 0.3f, 0f, bumpEnd, 0f)
+    }
+    drawScope.drawPath(strokePath, Color.White.copy(alpha = 0.5f), style = Stroke(width = 1.5f))
+}
+
 @Composable
 fun BottomNavigationBar(navController: NavController, selectedIcon: String, onIconSelected: (String) -> Unit) {
-    val backdrop = rememberLayerBackdrop()
+    val selectorBackdrop = rememberLayerBackdrop()
+    val density = LocalDensity.current
+    val scope = rememberCoroutineScope()
+
+    val tabFractions = mapOf("Home" to 0.1f, "Chat" to 0.32f, "Video" to 0.68f, "Search" to 0.9f)
+    val targetFraction = tabFractions[selectedIcon] ?: 0.1f
+
+    val selectorX = remember { Animatable(targetFraction) }
+    // Controls glass visibility: 1f = fully visible during drag, 0f = invisible at rest
+    val glassAlpha = remember { Animatable(0f) }
+    var isDragging by remember { mutableStateOf(false) }
+
+    val prevSelected = remember { mutableStateOf(selectedIcon) }
+    if (prevSelected.value != selectedIcon && !isDragging) {
+        prevSelected.value = selectedIcon
+        scope.launch {
+            selectorX.animateTo(
+                targetValue = targetFraction,
+                animationSpec = spring(dampingRatio = 0.5f, stiffness = Spring.StiffnessMediumLow)
+            )
+        }
+    }
+
+    val selectorWidthDp = 52.dp
+    val selectorHeightDp = 36.dp
+    val selectorWidthPx = with(density) { selectorWidthDp.toPx() }
+    val selectorShape = RoundedCornerShape(50)
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .drawBackdrop(
-                backdrop,
-                shape = {CircleShape},
-                effects = {
-                    lens(16f.dp.toPx(), 32f.dp.toPx())
-                }
-            )
-            .padding(start = 20.dp, end = 20.dp, bottom = 10.dp)
-
+            .padding(start = Dimens.horizontalPadding, end = Dimens.horizontalPadding, bottom = 16.dp)
     ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)
+                .height(64.dp)
                 .align(Alignment.Center),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.Transparent
-            ),
-            elevation = CardDefaults.elevatedCardElevation(5.dp),
-            shape = RoundedCornerShape(50.dp),
+            shape = RoundedCornerShape(32.dp),
+            elevation = CardDefaults.elevatedCardElevation(8.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = Color.Transparent),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically
+                    .pointerInput(Unit) {
+                        detectHorizontalDragGestures(
+                            onDragStart = {
+                                isDragging = true
+                                scope.launch {
+                                    // Fade glass in instantly on drag start
+                                    glassAlpha.animateTo(1f, animationSpec = tween(120))
+                                }
+                            },
+                            onDragEnd = {
+                                isDragging = false
+                                val nearest = tabFractions.minByOrNull { kotlin.math.abs(it.value - selectorX.value) }
+                                if (nearest != null) {
+                                    scope.launch {
+                                        // Snap to tab with spring, then fade glass out
+                                        selectorX.animateTo(
+                                            nearest.value,
+                                            animationSpec = spring(dampingRatio = 0.4f, stiffness = Spring.StiffnessMedium)
+                                        )
+                                        glassAlpha.animateTo(0f, animationSpec = tween(250))
+                                    }
+                                    onIconSelected(nearest.key)
+                                }
+                            },
+                            onDragCancel = {
+                                isDragging = false
+                                scope.launch { glassAlpha.animateTo(0f, animationSpec = tween(200)) }
+                            },
+                            onHorizontalDrag = { change, dragAmount ->
+                                change.consume()
+                                scope.launch {
+                                    selectorX.snapTo((selectorX.value + dragAmount / size.width).coerceIn(0.05f, 0.95f))
+                                }
+                            }
+                        )
+                    }
             ) {
-                IconWithSelection(
-                    isSelected = selectedIcon == "Home",
-                    icon = Icons.Filled.Home,
-                    contentDescription = "Home",
-                    onClick = { onIconSelected("Home") }
-                )
-                IconWithSelection(
-                    isSelected = selectedIcon == "Chat",
-                    painter = rememberAsyncImagePainter(R.drawable.chat),
-                    contentDescription = "Chat",
-                    onClick = { onIconSelected("Chat") }
-                )
-                Spacer(Modifier.width(50.dp))
-                IconWithSelection(
-                    isSelected = selectedIcon == "Video",
-                    painter = rememberAsyncImagePainter(R.drawable.video),
-                    contentDescription = "Video",
-                    onClick = { onIconSelected("Video") }
-                )
-                IconWithSelection(
-                    isSelected = selectedIcon == "Search",
-                    icon = Icons.Filled.Search,
-                    contentDescription = "Search",
-                    onClick = { onIconSelected("Search") }
-                )
-            }
+                // Glass effect — only visible while dragging (controlled by glassAlpha)
+                if (glassAlpha.value > 0f) {
+                    val barWidthPx = with(density) {
+                        (LocalContext.current.resources.displayMetrics.widthPixels - (Dimens.horizontalPadding * 2).toPx())
+                    }
+                    val selectorOffsetX = (selectorX.value * barWidthPx - selectorWidthPx / 2f)
+                        .coerceIn(0f, barWidthPx - selectorWidthPx)
+
+                    Box(
+                        modifier = Modifier
+                            .offset { androidx.compose.ui.unit.IntOffset(selectorOffsetX.toInt(), 0) }
+                            .width(selectorWidthDp)
+                            .height(selectorHeightDp)
+                            .alpha(glassAlpha.value)
+                            .align(Alignment.CenterStart)
+                            .drawBackdrop(
+                                backdrop = selectorBackdrop,
+                                shape = { selectorShape },
+                                effects = {
+                                    blur(radius = 30f)
+                                    colorControls(brightness = 0.1f, contrast = 1.15f, saturation = 1.3f)
+                                    lens(
+                                        refractionHeight = 8f.dp.toPx(),
+                                        refractionAmount = 16f.dp.toPx(),
+                                        depthEffect = true,
+                                        chromaticAberration = true
+                                    )
+                                },
+                                highlight = { Highlight(width = 1.dp, alpha = 0.8f, style = HighlightStyle.Ambient) },
+                                shadow = { Shadow(radius = 12.dp, color = Color.Black.copy(alpha = 0.12f)) },
+                                innerShadow = { InnerShadow(radius = 6.dp, color = Color.White.copy(alpha = 0.4f), offset = DpOffset(0.dp, (-1).dp)) }
+                            )
+                    )
+                }
+
+                // Icons
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconWithSelection(isSelected = selectedIcon == "Home", icon = Icons.Filled.Home, contentDescription = "Home", onClick = { onIconSelected("Home") })
+                    IconWithSelection(isSelected = selectedIcon == "Chat", painter = rememberAsyncImagePainter(R.drawable.chat), contentDescription = "Chat", onClick = { onIconSelected("Chat") })
+                    Spacer(Modifier.width(56.dp))
+                    IconWithSelection(isSelected = selectedIcon == "Video", painter = rememberAsyncImagePainter(R.drawable.video), contentDescription = "Video", onClick = { onIconSelected("Video") })
+                    IconWithSelection(isSelected = selectedIcon == "Search", icon = Icons.Filled.Search, contentDescription = "Search", onClick = { onIconSelected("Search") })
+                }            }
         }
+
+        // FAB
         Card(
             modifier = Modifier
-                .height(70.dp)
-                .width(70.dp)
-                .clip(shape = CircleShape)
-                .background(color = Color.White)
+                .size(56.dp)
                 .align(Alignment.BottomCenter)
-                .clickable(
-                ) { navController.navigate("posting") },
+                .offset(y = (-4).dp)
+                .clickable { navController.navigate("posting") },
             shape = CircleShape,
             elevation = CardDefaults.elevatedCardElevation(8.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xfff89b29))
         ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Image(
                     imageVector = Icons.Filled.Add,
-                    contentDescription = "Plus",
-                    colorFilter = ColorFilter.tint(color = Color.White),
-                    modifier = Modifier.size(40.dp)
+                    contentDescription = "Post",
+                    colorFilter = ColorFilter.tint(Color.White),
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }
@@ -272,35 +391,30 @@ fun IconWithSelection(
     icon: ImageVector? = null,
     painter: Painter? = null,
     contentDescription: String,
-    onClick:  () -> Unit,
+    onClick: () -> Unit,
     isAddButton: Boolean = false
 ) {
     Box(
         modifier = Modifier
-            .size(if (isAddButton) 50.dp else 40.dp)
-            .background(
-                color = if (isSelected) Color.Gray.copy(alpha = 0.5f) else Color.Transparent,
-                shape = CircleShape
-            ).clickable(
-            ) { onClick() }
-            .shadow(if (isAddButton) 8.dp else 0.dp, CircleShape)
+            .size(if (isAddButton) 50.dp else 42.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isSelected) Color(0xfff89b29).copy(alpha = 0.15f) else Color.Transparent)
+            .clickable { onClick() }
             .padding(8.dp),
         contentAlignment = Alignment.Center
     ) {
-
         if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
-                tint = Color(0xfff89b29),
-
-                modifier = Modifier.size(if (isAddButton) 32.dp else 24.dp) // Larger icon size for Add button
+                tint = if (isSelected) Color(0xfff89b29) else Color.Gray,
+                modifier = Modifier.size(if (isAddButton) 32.dp else 24.dp)
             )
         } else if (painter != null) {
             Image(
                 painter = painter,
                 contentDescription = contentDescription,
-                colorFilter = ColorFilter.tint(Color(0xfff89b29)),
+                colorFilter = ColorFilter.tint(if (isSelected) Color(0xfff89b29) else Color.Gray),
                 modifier = Modifier.size(if (isAddButton) 32.dp else 24.dp)
             )
         }
@@ -329,7 +443,7 @@ fun GlideImage(
 data class Status(val profileImage :String,val profileStatus: List<String>)
 
 @Composable
-fun discoverList(statusList: List<Status>) {
+fun discoverList(statusList: List<Status>, navController: NavController) {
     val infiniteState = rememberLazyListState()
 
     val names = listOf(
@@ -341,46 +455,43 @@ fun discoverList(statusList: List<Status>) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp),
-        contentAlignment = Alignment.Center
+            .height(88.dp),
+        contentAlignment = Alignment.TopCenter
     ) {
         LazyRow(
             state = infiniteState,
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+            contentPadding = PaddingValues(top = 4.dp, start = 4.dp, end = 4.dp)
         ) {
-            items(statusList.size * 10) { index -> // Only repeat 10 times to avoid Int.MAX_VALUE
+            items(statusList.size * 10) { index ->
                 val actualIndex = index % statusList.size
-                val status = statusList[actualIndex] // Get the actual item
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    modifier = Modifier
+                        .padding(horizontal = 6.dp)
+                        .clickable { navController.navigate("status") }
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(55.dp)
-                    ) {
-                        GradientCircle() // Cached composable for smooth performance
-
-                        // Image
+                    Box(modifier = Modifier.size(48.dp)) {
+                        GradientCircle()
                         Card(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(4.dp),
+                                .padding(3.dp),
                             shape = CircleShape,
                             elevation = CardDefaults.elevatedCardElevation(4.dp)
                         ) {
                             AsyncImage(
-                                model = R.drawable.woman, // Use Coil for better caching
+                                model = R.drawable.woman,
                                 contentDescription = "",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
                     }
-                    Text(names[actualIndex % names.size], fontSize = 12.sp)
+                    Spacer(Modifier.height(3.dp))
+                    Text(names[actualIndex % names.size], fontSize = 11.sp)
                 }
             }
         }
@@ -496,31 +607,106 @@ fun homeContent(navController: NavController) {
 
     Box() {
         Column(
-            modifier = Modifier.padding(start = 10.dp, end = 10.dp).statusBarsPadding()
+            modifier = Modifier
+                .padding(horizontal = Dimens.horizontalPadding)
+                .statusBarsPadding()
         ) {
+            // Static header — does not scroll
             TopBar(navController)
             Spacer(modifier = Modifier.height(10.dp))
-
-            // Discover and Following Tabs
             TabRow(colorState) { colorState = it }
-
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.height(80.dp)) {
-                ProfileBox()
-                Spacer(Modifier.width(1.dp))
-                discoverList(stateList)
+            // Scrollable content — story + posts scroll together
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                item {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.height(95.dp)
+                    ) {
+                        ProfileBox()
+                        Spacer(Modifier.width(1.dp))
+                        discoverList(stateList, navController)
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        text = "Recent Post",
+                        style = TextStyle(color = Color.Gray, fontSize = 20.sp)
+                    )
+                    Spacer(Modifier.height(5.dp))
+                }
+                items(20) { it ->
+                    val cardColor = generateRandomColor()
+                    val scrollState = rememberScrollState()
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 5.dp, end = 5.dp, top = 5.dp)
+                            .background(Color.Transparent),
+                        shape = RoundedCornerShape(30.dp),
+                        elevation = CardDefaults.elevatedCardElevation(4.dp),
+                        colors = CardDefaults.cardColors(containerColor = cardColor)
+                    ) {
+                        Column(Modifier.padding(15.dp)) {
+                            Row(modifier = Modifier.height(60.dp).padding(4.dp)) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(R.drawable.boy),
+                                    contentDescription = "",
+                                    modifier = Modifier.size(50.dp).clickable(
+                                        enabled = true,
+                                        onClick = {
+                                            navController.navigate("profileforother") {
+                                                launchSingleTop = true
+                                            }
+                                        }
+                                    )
+                                )
+                                Column(
+                                    modifier = Modifier.fillMaxHeight().padding(start = 5.dp),
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Text(text = "Alice", style = TextStyle(color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 20.sp))
+                                    Text(text = "Posted 1h ago", style = TextStyle(color = Color.Gray))
+                                }
+                                Row(
+                                    Modifier.fillMaxWidth().fillMaxHeight(),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(R.drawable.menulist),
+                                        colorFilter = ColorFilter.tint(color = Color.Black),
+                                        contentDescription = "",
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Text(text = "Discover adventure in patogania's peaks or serenity provences @helmets-arrival", style = TextStyle(fontSize = 15.sp))
+                            Spacer(Modifier.height(10.dp))
+                            Row(modifier = Modifier.horizontalScroll(scrollState)) {
+                                GlideImage(imageUrl = R.drawable.forest2, modifier = Modifier.size(150.dp), contentScale = ContentScale.Crop)
+                                Spacer(Modifier.width(5.dp))
+                                GlideImage(imageUrl = R.drawable.forest2, modifier = Modifier.size(150.dp), contentScale = ContentScale.Crop)
+                            }
+                            Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Image(painter = rememberAsyncImagePainter(R.drawable.like), modifier = Modifier.size(27.dp), contentDescription = "")
+                                    Text(text = " 349 Likes", style = TextStyle(color = Color.Gray))
+                                }
+                                Spacer(modifier = Modifier.width(15.dp))
+                                Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Image(painter = rememberAsyncImagePainter(R.drawable.comment), modifier = Modifier.size(27.dp), contentDescription = "")
+                                    Text(text = " 520 Comments", style = TextStyle(color = Color.Gray))
+                                }
+                                Spacer(modifier = Modifier.weight(1f))
+                                Image(painter = rememberAsyncImagePainter(R.drawable.share), modifier = Modifier.size(23.dp), contentDescription = "")
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(5.dp))
+                }
             }
-
-            Spacer(Modifier.height(10.dp))
-
-            Text(
-                text = "Recent Post",
-                style = TextStyle(color = Color.Gray, fontSize = 20.sp)
-            )
-            postList(navController)
         }
-//        MovableGlassView()
     }
 }
 
@@ -617,7 +803,7 @@ fun ProfileBox() {
     Box(
         modifier = Modifier
             .padding(4.dp)
-            .size(80.dp),
+            .size(54.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
         GradientCircle()
@@ -641,8 +827,8 @@ fun ProfileBox() {
             model = R.drawable.button,
             contentDescription = "",
             modifier = Modifier
-                .size(20.dp)
-                .offset(y = 10.dp)
+                .size(16.dp)
+                .offset(y = 8.dp)
                 .align(Alignment.BottomCenter)
                 .background(Color.Transparent)
         )
@@ -652,7 +838,7 @@ fun ProfileBox() {
 @Composable
 fun GradientCircle() {
     Canvas(
-        modifier = Modifier.size(80.dp)
+        modifier = Modifier.size(54.dp)
     ) {
         val strokeWidth = 4.dp.toPx()
         drawCircle(

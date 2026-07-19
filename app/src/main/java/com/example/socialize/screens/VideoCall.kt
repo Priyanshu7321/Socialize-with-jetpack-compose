@@ -162,8 +162,6 @@ fun videoView(navController: NavController) {
         // Button moved back to BoxScope for Alignment.BottomCenter
         Button(
             onClick = {
-                // Navigate to video call screen
-                // Use random IDs for testing or implement user selection logic
                 val myId = "user_" + (1000..9999).random()
                 val otherId = "remote_user"
                 navController.navigate("videoCallWebView/$myId/$otherId")
@@ -171,17 +169,18 @@ fun videoView(navController: NavController) {
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
             contentPadding = PaddingValues(),
             modifier = Modifier
-                .align(Alignment.BottomCenter) // Position in Box
-                .navigationBarsPadding() // Apply inset padding first (outer)
-                .padding(bottom = 35.dp)
-                .height(50.dp) // Set height (inner)
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(horizontal = 32.dp, vertical = 16.dp)
+                .fillMaxWidth()
+                .height(52.dp)
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(Color(0xFFFF6F61), Color(0xFF6200EE))
                     ),
-                    shape = RoundedCornerShape(25.dp)
+                    shape = RoundedCornerShape(26.dp)
                 ),
-            shape = RoundedCornerShape(25.dp)
+            shape = RoundedCornerShape(26.dp)
         ) {
             Text(
                 text = "Start Video Call",

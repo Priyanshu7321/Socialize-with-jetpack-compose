@@ -67,6 +67,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.socialize.auth.GoogleAuthUiClient
 import com.example.socialize.composables.home
+import com.example.socialize.screens.SplashScreen
 import com.example.socialize.entity.UserPassword
 import com.example.socialize.repository.DatastoreRepository
 import com.example.socialize.ui.components.ErrorDialog
@@ -126,34 +127,28 @@ class SignAndLogin : ComponentActivity() {
         setContent {
             SocializeTheme {
                 val navControllerHost = rememberNavController()
-                Scaffold(
-                    modifier = Modifier.fillMaxSize()
-                ) { innerPadding ->
-                    val datastoreViewModel: DatastoreViewModel = hiltViewModel()
+                val datastoreViewModel: DatastoreViewModel = hiltViewModel()
+                val authState by datastoreViewModel.authStateFlow
+                    .collectAsState(initial = AuthLoginState.Loading)
+                var splashDone by remember { mutableStateOf(false) }
 
-                    val authState by datastoreViewModel.authStateFlow
-                        .collectAsState(initial = AuthLoginState.Loading)
-
-                    when (authState) {
-                        AuthLoginState.Loading -> {
-                            // Splash / empty screen
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    when {
+                        !splashDone -> {
+                            SplashScreen(onSplashComplete = { splashDone = true })
                         }
-
-                        AuthLoginState.Authenticated -> {
+                        authState == AuthLoginState.Loading -> {
+                            // DataStore still reading — show nothing (splash already covered this)
+                            Box(Modifier.fillMaxSize())
+                        }
+                        authState == AuthLoginState.Authenticated -> {
                             AppNavHost(
                                 navController = navControllerHost,
                                 startDestination = "home",
                                 innerPadding = innerPadding
                             )
                         }
-
-                        AuthLoginState.Unauthenticated -> {
+                        else -> {
                             AppNavHost(
                                 navController = navControllerHost,
                                 startDestination = "LoginSignUp",
@@ -161,7 +156,6 @@ class SignAndLogin : ComponentActivity() {
                             )
                         }
                     }
-
                 }
             }
         }
