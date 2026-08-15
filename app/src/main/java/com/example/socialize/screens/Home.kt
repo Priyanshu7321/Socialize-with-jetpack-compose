@@ -112,6 +112,7 @@ import com.kashif_e.backdrop.highlight.HighlightStyle
 import com.kashif_e.backdrop.shadow.InnerShadow
 import com.kashif_e.backdrop.shadow.Shadow
 import kotlinx.coroutines.launch
+import org.intellij.lang.annotations.JdkConstants
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.random.Random
@@ -688,14 +689,14 @@ fun homeContent(navController: NavController) {
                                 Spacer(Modifier.width(5.dp))
                                 GlideImage(imageUrl = R.drawable.forest2, modifier = Modifier.size(150.dp), contentScale = ContentScale.Crop)
                             }
-                            Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Image(painter = rememberAsyncImagePainter(R.drawable.like), modifier = Modifier.size(27.dp), contentDescription = "")
+                            Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.Bottom) {
+                                Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.Bottom) {
+                                    Image(painter = rememberAsyncImagePainter(R.drawable.like), modifier = Modifier.size(20.dp), contentDescription = "")
                                     Text(text = " 349 Likes", style = TextStyle(color = Color.Gray))
                                 }
                                 Spacer(modifier = Modifier.width(15.dp))
-                                Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Image(painter = rememberAsyncImagePainter(R.drawable.comment), modifier = Modifier.size(27.dp), contentDescription = "")
+                                Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.Bottom) {
+                                    Image(painter = rememberAsyncImagePainter(R.drawable.comment), modifier = Modifier.size(20.dp), contentDescription = "")
                                     Text(text = " 520 Comments", style = TextStyle(color = Color.Gray))
                                 }
                                 Spacer(modifier = Modifier.weight(1f))
@@ -800,11 +801,12 @@ fun TabButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
 
 @Composable
 fun ProfileBox() {
-    Box(
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {Box(
         modifier = Modifier
             .padding(4.dp)
-            .size(54.dp),
-        contentAlignment = Alignment.BottomCenter
+            .size(54.dp)
+        ,
+
     ) {
         GradientCircle()
 
@@ -833,6 +835,11 @@ fun ProfileBox() {
                 .background(Color.Transparent)
         )
     }
+
+        Spacer(Modifier.height(3.dp))
+        Text("You", fontSize = 11.sp)
+    }
+
 }
 
 @Composable

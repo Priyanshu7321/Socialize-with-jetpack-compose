@@ -73,7 +73,7 @@ fun members(navController: NavController) {
         ) {
             Text(
                 text = "Messages",
-                style = TextStyle(fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             )
             Spacer(modifier = Modifier.weight(1f))
             // Camera icon — use Material icon, no Card wrapper

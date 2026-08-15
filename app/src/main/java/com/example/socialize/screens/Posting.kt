@@ -1,6 +1,8 @@
 package com.example.socialize.screens
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -41,49 +45,176 @@ import com.example.socialize.R
 import com.example.socialize.ui.theme.Dimens
 
 @Composable
-fun post(navController: NavController){
-    var text by remember{ mutableStateOf("") }
-    Column (
+fun post(
+    navController: NavController
+) {
+
+    var text by remember { mutableStateOf("") }
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .systemBarsPadding()
-            .padding(horizontal = Dimens.horizontalPadding),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ){
-        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)){
-            Image(
-                painter = painterResource(R.drawable.back),
-                contentDescription = "",
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(Modifier.size(10.dp))
-                Text("Express your views", style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold))
+            .padding(horizontal = Dimens.horizontalPadding)
+    ) {
 
-
-        }
-        Card(
-            modifier = Modifier
-                .width(300.dp)
-                .height(200.dp)
-                .padding(vertical = 12.dp),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Box(modifier = Modifier.fillMaxSize()){
-                Image(
-                    modifier = Modifier.align(Alignment.Center).size(100.dp),
-                    painter = painterResource(R.drawable.addimage),
-                    contentDescription = "",
-                )
-            }
-        }
-        TextField(
-            value = text,
-            onValueChange = {it-> text=it},
-            label = { Text("Write your views...") },
+        // Header
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 12.dp),
-            colors = TextFieldDefaults.colors(unfocusedContainerColor = Color.White),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Image(
+                painter = painterResource(R.drawable.back),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(22.dp)
+                    .clickable {
+//                        onBackPressed()
+                    }
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Text(
+                text = "Express your views",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+
+            Text(
+                text = "Post",
+                color = Color(0xFF1976D2),
+                fontWeight = FontWeight.Bold,
+                fontSize = 17.sp,
+                modifier = Modifier.clickable {
+                    // Upload Post
+                }
+            )
+        }
+
+        // Text Area
+        OutlinedTextField(
+            value = text,
+            onValueChange = {
+                text = it
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp),
+            placeholder = {
+                Text("What's on your mind?")
+            },
+            shape = RoundedCornerShape(16.dp),
+            maxLines = 10
         )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Media Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(180.dp)
+                .clickable {
+                    // Open picker
+                },
+            shape = RoundedCornerShape(18.dp),
+            elevation = CardDefaults.cardElevation(3.dp)
+        ) {
+
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+
+                Image(
+                    painter = painterResource(R.drawable.addimage),
+                    contentDescription = null,
+                    modifier = Modifier.size(70.dp)
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    "Add Photo, Video or Music",
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Text(
+                    "Tap to browse",
+                    color = Color.Gray,
+                    fontSize = 13.sp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Attachment Buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+
+            AttachmentButton(
+                icon = R.drawable.addimage,
+                text = "Photo"
+            ) {
+                // Photo picker
+            }
+
+            AttachmentButton(
+                icon = R.drawable.video,
+                text = "Video"
+            ) {
+                // Video picker
+            }
+
+            AttachmentButton(
+                icon = R.drawable.audio,
+                text = "Music"
+            ) {
+                // Audio picker
+            }
+        }
+    }
+}
+@Composable
+fun AttachmentButton(
+    icon: Int,
+    text: String,
+    onClick: () -> Unit
+) {
+
+    Card(
+        modifier = Modifier
+            .width(100.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+
+        Column(
+            modifier = Modifier
+                .padding(vertical = 16.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            Image(
+                painter = painterResource(icon),
+                contentDescription = null,
+                modifier = Modifier.size(30.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(text)
+        }
     }
 }

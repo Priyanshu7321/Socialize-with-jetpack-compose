@@ -62,14 +62,17 @@ fun Users(navController: NavController) {
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                painter = painterResource(R.drawable.back),
-                contentDescription = "Back",
-                modifier = Modifier
-                    .size(25.dp)
-                    .clickable { navController.popBackStack() },
-                tint = Color.Black
-            )
+            if(false) {
+                Icon(
+                    painter = painterResource(R.drawable.back),
+                    contentDescription = "Back",
+                    modifier = Modifier
+                        .size(25.dp)
+                        .clickable { navController.popBackStack() },
+                    tint = Color.Black,
+
+                    )
+            }
             // Search bar — same style as Members screen
             Card(
                 modifier = Modifier.weight(1f),
@@ -115,10 +118,10 @@ fun Users(navController: NavController) {
                 }
             }
             Icon(
-                painter = painterResource(R.drawable.menulist),
+                painter = painterResource(R.drawable.filter),
                 contentDescription = "Filter",
                 tint = Color.Black,
-                modifier = Modifier.size(25.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
         Spacer(Modifier.height(8.dp))

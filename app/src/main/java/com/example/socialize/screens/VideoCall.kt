@@ -167,20 +167,23 @@ fun videoView(navController: NavController) {
                 navController.navigate("videoCallWebView/$myId/$otherId")
             },
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-            contentPadding = PaddingValues(),
             modifier = Modifier
+                .padding( bottom = 34.dp)
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(horizontal = 32.dp, vertical = 16.dp)
-                .fillMaxWidth()
                 .height(52.dp)
                 .background(
                     brush = Brush.horizontalGradient(
                         colors = listOf(Color(0xFFFF6F61), Color(0xFF6200EE))
                     ),
-                    shape = RoundedCornerShape(26.dp)
+                    shape = RoundedCornerShape(20.dp)
                 ),
-            shape = RoundedCornerShape(26.dp)
+
+            contentPadding = PaddingValues(
+                horizontal = 20.dp,
+                vertical = 10.dp
+            ),
+            shape = RoundedCornerShape(20.dp)
         ) {
             Text(
                 text = "Start Video Call",

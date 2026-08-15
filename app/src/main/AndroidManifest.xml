@@ -9,6 +9,14 @@
     
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+    <!-- Required if your app targets Android 11+ -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService"/>
+        </intent>
+    </queries>
     <application
         android:name=".MyApplication"
         android:allowBackup="true"

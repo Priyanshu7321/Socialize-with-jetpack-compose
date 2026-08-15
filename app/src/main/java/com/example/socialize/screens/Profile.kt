@@ -270,7 +270,7 @@ fun profileforother(navController: NavController){
     var midw= LocalConfiguration.current.screenWidthDp/2-50
     var select by remember{ mutableIntStateOf(0) }
     Column(modifier=Modifier.fillMaxSize()){
-        Box(modifier=Modifier.fillMaxWidth().height(250.dp).padding(5.dp),){
+        Box(modifier=Modifier.fillMaxWidth().height(250.dp),){
             Card(shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 40.dp, bottomStart = 40.dp)){
                 OptimizedAsyncImage(
                     model = R.drawable.forest2, // Using smaller image (65KB instead of 2.4MB)
@@ -279,6 +279,11 @@ fun profileforother(navController: NavController){
                     contentScale = ContentScale.Crop
                 )
             }
+            Image(
+                painter = rememberAsyncImagePainter(R.drawable.back),
+                contentDescription = "",
+                modifier = Modifier.size(20.dp)
+            )
             Box (Modifier.height(100.dp).width(100.dp).offset(x=30.dp,y=150.dp)){
                 Canvas(modifier = Modifier.size(180.dp)) {
                     drawCircle(
@@ -293,7 +298,7 @@ fun profileforother(navController: NavController){
                     Image(painter = rememberAsyncImagePainter(R.drawable.boy), contentDescription = "")
                 }
             }
-            Card(modifier=Modifier.offset(midw.dp+30.dp,175.dp).size(50.dp), shape = RoundedCornerShape(20.dp), elevation = CardDefaults.cardElevation(5.dp)){
+            Card(modifier=Modifier.offset(midw.dp+30.dp,175.dp).size(50.dp).clickable(true, onClick = { navController.navigate("chats") }), shape = RoundedCornerShape(20.dp), elevation = CardDefaults.cardElevation(5.dp)){
                 Box(Modifier.fillMaxSize().background(Color.White),contentAlignment = Alignment.Center){
                     Image(painter = rememberAsyncImagePainter(R.drawable.message), contentDescription = "",modifier=Modifier.size(40.dp))
                 }
@@ -321,7 +326,7 @@ fun profileforother(navController: NavController){
                 Text(text = "Posts", style = TextStyle(color=Color.Gray))
             }
         }
-        Row(modifier=Modifier.width(LocalConfiguration.current.screenWidthDp.dp-20.dp).height(50.dp).clip(shape = RoundedCornerShape(20.dp)).background(color = Color.Gray.copy(alpha = 0.2f)).padding(5.dp).align(Alignment.CenterHorizontally)){
+        Row(modifier=Modifier.width(LocalConfiguration.current.screenWidthDp.dp-20.dp).height(60.dp).clip(shape = RoundedCornerShape(20.dp)).background(color = Color.Gray.copy(alpha = 0.2f)).padding(5.dp).align(Alignment.CenterHorizontally)){
             Box(
                 Modifier.weight(1f)
                     .fillMaxHeight()
@@ -362,7 +367,7 @@ fun profileforother(navController: NavController){
                     )
                     if (select == 1) {
                         Spacer(Modifier.height(4.dp))
-                        Text("Post",modifier = Modifier.weight(1f))
+                        Text("Bookmark",modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -384,7 +389,7 @@ fun profileforother(navController: NavController){
                     )
                     if (select == 2) {
                         Spacer(Modifier.height(4.dp))
-                        Text("Post",modifier = Modifier.weight(1f))
+                        Text("Analytics",modifier = Modifier.weight(1f))
                     }
                 }
             }

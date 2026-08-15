@@ -347,7 +347,11 @@ fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel
                     Spacer(modifier = Modifier.width(5.dp))
                     Text(
                         text = "Socialize",
-                        style = TextStyle(fontSize = 30.sp, color = Color.Magenta, fontWeight = FontWeight.Bold)
+                        style = TextStyle(
+                            fontSize = 30.sp,
+                            color = Color(0xFFFF9800), // Orange 500
+                            fontWeight = FontWeight.Bold
+                        )
                     )
                 }
             }
@@ -693,7 +697,7 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
             ),
         shape = RoundedCornerShape(30.dp),
         elevation = CardDefaults.elevatedCardElevation(10.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Magenta),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFF9800)),
 
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -832,7 +836,7 @@ fun Login(navController: NavController, networkViewModel: NetworkViewModel = hil
             ),
         shape = RoundedCornerShape(30.dp),
         elevation = CardDefaults.elevatedCardElevation(10.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Magenta),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFF9800)),
 
         ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
