@@ -22,6 +22,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PermMedia
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Report
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -50,11 +54,45 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.socialize.R
+import com.example.socialize.ui.components.OptionsPopup
+import com.example.socialize.ui.components.PopupOption
 import com.example.socialize.ui.theme.Dimens
 import com.example.socialize.viewmodel.DatabaseViewModel
 
 @Composable
 fun chats(navController: NavController, databaseViewModel: DatabaseViewModel = hiltViewModel()) {
+    var showpopup = remember { mutableStateOf(false) }
+    val contactPopupOptions = listOf(
+        PopupOption(
+            label = "Add to contacts",
+            icon = Icons.Default.PersonAdd
+        ) {
+            // Add contact logic
+        },
+
+        PopupOption(
+            label = "Media",
+            icon = Icons.Default.PermMedia
+        ) {
+            // Open media
+        },
+
+        PopupOption(
+            label = "Search",
+            icon = Icons.Default.Search
+        ) {
+            // Search messages
+        },
+
+        PopupOption(
+            label = "Report",
+            icon = Icons.Default.Report,
+            tint = Color(0xFFD32F2F),
+            labelColor = Color(0xFFD32F2F)
+        ) {
+            // Report user/chat
+        }
+    )
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -69,12 +107,12 @@ fun chats(navController: NavController, databaseViewModel: DatabaseViewModel = h
                 .padding(horizontal = Dimens.horizontalPadding, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.size(36.dp)) {
+            IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.size(22.dp)) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBackIosNew,
                     contentDescription = "Back",
                     tint = Color.Black,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
             Spacer(Modifier.width(8.dp))
@@ -115,12 +153,22 @@ fun chats(navController: NavController, databaseViewModel: DatabaseViewModel = h
                 )
             }
             Spacer(Modifier.width(4.dp))
-            IconButton(onClick = { }, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    imageVector = Icons.Filled.MoreVert,
-                    contentDescription = "More options",
-                    tint = Color.Black,
-                    modifier = Modifier.size(22.dp)
+            Box {
+                IconButton(onClick = {
+                    showpopup.value = !showpopup.value
+                }, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = "More options",
+                        tint = Color.Black,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                OptionsPopup(
+                    expanded = showpopup.value,
+                    options = contactPopupOptions,
+                    onDismiss = { showpopup.value = false },
+                    title = null
                 )
             }
         }
@@ -150,7 +198,7 @@ fun mainChatSection() {
                         .padding(start = 48.dp, top = 4.dp, bottom = 4.dp)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.Bottom
+                    verticalAlignment = Alignment.Top
                 ) {
                     Column(horizontalAlignment = Alignment.End) {
                         Card(
@@ -183,7 +231,7 @@ fun mainChatSection() {
                         .padding(end = 48.dp, top = 4.dp, bottom = 4.dp)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.Bottom
+                    verticalAlignment = Alignment.Top
                 ) {
                     Image(
                         painter = painterResource(R.drawable.boy),
@@ -226,7 +274,7 @@ fun messageSendSection() {
             .padding(horizontal = Dimens.horizontalPadding, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { }, modifier = Modifier.size(36.dp)) {
+        IconButton(onClick = { }, modifier = Modifier.size(22.dp)) {
             Icon(
                 painter = painterResource(R.drawable.audio),
                 contentDescription = "Voice",
@@ -252,7 +300,6 @@ fun messageSendSection() {
                     value = textval,
                     onValueChange = { textval = it },
                     modifier = Modifier.weight(1f),
-                    singleLine = true,
                     placeholder = { Text(text = "Message...", style = TextStyle(color = Color.Gray, fontSize = 15.sp)) },
                     textStyle = TextStyle(fontSize = 15.sp),
                     colors = TextFieldDefaults.colors(

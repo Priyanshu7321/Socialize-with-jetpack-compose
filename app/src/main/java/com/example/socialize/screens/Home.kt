@@ -119,7 +119,7 @@ import kotlin.random.Random
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun home(navControllerHost: NavController) {
+fun home(navControllerHost: NavController,innerPadding: PaddingValues) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     var selectedIcon by remember { mutableStateOf("Home") }
     val navController = rememberNavController()
@@ -135,6 +135,7 @@ fun home(navControllerHost: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Transparent)
+                .padding(bottom = innerPadding.calculateBottomPadding())
             ,
             contentAlignment = Alignment.BottomCenter
         ) {
@@ -643,13 +644,19 @@ fun homeContent(navController: NavController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 5.dp, end = 5.dp, top = 5.dp)
-                            .background(Color.Transparent),
+                            .shadow(
+                                elevation = 8.dp,
+                                shape = RoundedCornerShape(30.dp),
+                                ambientColor = Color(0xFFFF9800).copy(alpha = 0.30f),
+                                spotColor = Color(0xFFFF9800).copy(alpha = 0.35f)
+                            ),
                         shape = RoundedCornerShape(30.dp),
-                        elevation = CardDefaults.elevatedCardElevation(4.dp),
-                        colors = CardDefaults.cardColors(containerColor = cardColor)
-                    ) {
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White
+                        )
+                    ){
                         Column(Modifier.padding(15.dp)) {
-                            Row(modifier = Modifier.height(60.dp).padding(4.dp)) {
+                            Row(modifier = Modifier.height(60.dp).padding(end = 4.dp, bottom = 4.dp)) {
                                 Image(
                                     painter = rememberAsyncImagePainter(R.drawable.boy),
                                     contentDescription = "",
@@ -692,15 +699,15 @@ fun homeContent(navController: NavController) {
                             Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.Bottom) {
                                 Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.Bottom) {
                                     Image(painter = rememberAsyncImagePainter(R.drawable.like), modifier = Modifier.size(20.dp), contentDescription = "")
-                                    Text(text = " 349 Likes", style = TextStyle(color = Color.Gray))
+                                    Text(text = "349", style = TextStyle(color = Color.Gray), modifier = Modifier.padding(start = 4.dp))
                                 }
                                 Spacer(modifier = Modifier.width(15.dp))
                                 Row(modifier = Modifier.height(40.dp), verticalAlignment = Alignment.Bottom) {
                                     Image(painter = rememberAsyncImagePainter(R.drawable.comment), modifier = Modifier.size(20.dp), contentDescription = "")
-                                    Text(text = " 520 Comments", style = TextStyle(color = Color.Gray))
+                                    Text(text = "520", style = TextStyle(color = Color.Gray), modifier = Modifier.padding(start = 4.dp))
                                 }
                                 Spacer(modifier = Modifier.weight(1f))
-                                Image(painter = rememberAsyncImagePainter(R.drawable.share), modifier = Modifier.size(23.dp), contentDescription = "")
+                                Image(painter = rememberAsyncImagePainter(R.drawable.share), modifier = Modifier.size(18.dp), contentDescription = "")
                             }
                         }
                     }

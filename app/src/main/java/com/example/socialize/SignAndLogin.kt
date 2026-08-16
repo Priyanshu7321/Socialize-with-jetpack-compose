@@ -172,13 +172,12 @@ fun AppNavHost(
         startDestination = startDestination,
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = innerPadding.calculateBottomPadding())
     ) {
         composable("LoginSignUp") {
             LoginSignUp(navController)
         }
         composable("home") {
-            home(navController)
+            home(navController, innerPadding)
         }
     }
 }
@@ -310,21 +309,7 @@ fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel
     }
     val googleAuthUiClient = remember { GoogleAuthUiClient(context) }
     
-    // One Tap launcher
-    val oneTapLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
-            coroutineScope.launch {
-                val signInResult = googleAuthUiClient.signInWithIntent(result.data!!)
-                signInResult.onSuccess { data ->
-                    networkViewModel.signInWithGoogle(data.idToken)
-                }.onFailure { e ->
-                    Toast.makeText(context, e.message ?: "Google Sign-In failed", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-    }
+
 
     var selectedSection by remember { mutableStateOf("Sign Up") }
     val scrollState = rememberScrollState()
@@ -401,9 +386,9 @@ fun LoginSignUp(navController: NavController, networkViewModel: NetworkViewModel
                                 context = context,
                                 coroutineScope = coroutineScope,
                                 googleAuthUiClient = googleAuthUiClient,
-                                oneTapLauncher = oneTapLauncher
+                                networkViewModel = networkViewModel
                             )
-                            networkViewModel.checkConnection();
+//                            networkViewModel.checkConnection();
                         },
                     shape = RoundedCornerShape(30.dp),
                     border = BorderStroke(width = 1.dp, color = Color.Gray),
@@ -529,21 +514,7 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
             }
     }
 
-    val oneTapLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartIntentSenderForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
-            val data = result.data!!
-            coroutineScope.launch {
-                val signInResult = googleAuthUiClient.signInWithIntent(data)
-                signInResult.onSuccess { res ->
-                    networkViewModel.signInWithGoogle(res.idToken)
-                }.onFailure { e ->
-                    Toast.makeText(context, e.message ?: "Google Sign-In failed", Toast.LENGTH_LONG).show()
-                }
-            }
-        }
-    }
+
 
     var name by remember { mutableStateOf("") }
     var email by remember{ mutableStateOf("") }
@@ -679,9 +650,12 @@ fun Signup(navController: NavController, networkViewModel: NetworkViewModel = hi
             .height(50.dp)
             .combinedClickable(
                 onClick = {
-                    scope.launch {
-                        networkViewModel.authenticate(UserPassword(name = name, email = email, password = password),"signup")
+                    navController.navigate("home") {
+                        popUpTo(0) { inclusive = true } // Clear back stack
                     }
+//                    scope.launch {
+//                        networkViewModel.authenticate(UserPassword(name = name, email = email, password = password),"signup")
+//                    }
 //                    handleGoogleSignIn(
 //                        isLoading = isLoading,
 //                        context = context,
@@ -968,22 +942,24 @@ internal fun handleGoogleSignIn(
     context: Context,
     coroutineScope: CoroutineScope,
     googleAuthUiClient: GoogleAuthUiClient,
-    oneTapLauncher: ActivityResultLauncher<IntentSenderRequest>
+    networkViewModel: NetworkViewModel
 ) {
     if (isLoading) return
 
     coroutineScope.launch {
-        val intentSender = googleAuthUiClient.beginSignIn()
-        if (intentSender != null) {
-            try {
-                oneTapLauncher.launch(IntentSenderRequest.Builder(intentSender).build())
-            } catch (e: Exception) {
-                Log.e("GoogleSignIn", "Failed to launch One Tap", e)
-                Toast.makeText(context, "Failed to launch Google Sign-In", Toast.LENGTH_LONG).show()
+        val signInResult = googleAuthUiClient.signIn()
+
+        signInResult
+            .onSuccess { res ->
+                networkViewModel.signInWithGoogle(res.idToken)
             }
-        } else {
-            Toast.makeText(context, "Unable to start Google One Tap", Toast.LENGTH_LONG).show()
-        }
+            .onFailure { e ->
+                Toast.makeText(
+                    context,
+                    e.message ?: "Google Sign-In failed",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
     }
 }
 
